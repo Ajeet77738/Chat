@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WhatsApp Secret Chat</title>
-    <!-- Tailwind CSS for modern styling -->
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Firebase App & Realtime Database CDN -->
+    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 </head>
@@ -16,12 +16,12 @@
     <div id="login-screen" class="bg-[#111b21] p-8 rounded-xl shadow-2xl w-96 border border-[#222d34]">
         <div class="text-center mb-6">
             <h1 class="text-2xl font-bold text-[#00a884]">Secret WhatsApp</h1>
-            <p class="text-sm text-[#8696a0] mt-1">Enter a secret room code to start chatting</p>
+            <p class="text-sm text-[#8696a0] mt-1">Enter code & name to start chatting</p>
         </div>
         <div class="space-y-4">
             <div>
                 <label class="block text-xs uppercase tracking-wider text-[#8696a0] mb-1">Room Passcode</label>
-                <input type="text" id="room-input" placeholder="e.g. secret-key-99" class="w-full bg-[#2a3942] border-none rounded-lg p-3 text-white focus:outline-none focus:ring-1 focus:ring-[#00a884]">
+                <input type="text" id="room-input" placeholder="e.g. secret-room-77" class="w-full bg-[#2a3942] border-none rounded-lg p-3 text-white focus:outline-none focus:ring-1 focus:ring-[#00a884]">
             </div>
             <div>
                 <label class="block text-xs uppercase tracking-wider text-[#8696a0] mb-1">Your Name</label>
@@ -39,26 +39,26 @@
         <div class="bg-[#202c33] px-6 py-4 flex items-center justify-between border-b border-[#222d34]">
             <div>
                 <h2 id="room-title" class="font-bold text-white text-lg">Room: </h2>
-                <p id="user-display" class="text-xs text-[#8696a0]"></p>
+                <p id="typing-status" class="text-xs text-[#00a884] h-4"></p>
             </div>
-            <button onclick="location.reload()" class="text-xs bg-[#2a3942] hover:bg-[#374248] px-3 py-1.5 rounded text-[#8696a0] hover:text-white transition">Leave Room</button>
+            <button onclick="leaveRoom()" class="text-xs bg-[#2a3942] hover:bg-[#374248] px-3 py-1.5 rounded text-[#8696a0] hover:text-white transition cursor-pointer">Leave Room</button>
         </div>
 
         <!-- Messages Box -->
         <div id="messages-container" class="flex-1 p-6 overflow-y-auto space-y-3 bg-[#0b141a]">
-            <!-- Messages load here -->
+            <!-- Dynamic messages load here -->
         </div>
 
         <!-- Input Box -->
         <div class="bg-[#202c33] p-4 flex items-center gap-3 border-t border-[#222d34]">
-            <input type="text" id="message-input" placeholder="Type a message..." onkeypress="handleKeyPress(event)" class="flex-1 bg-[#2a3942] border-none rounded-lg px-4 py-3 text-white focus:outline-none">
-            <button onclick="sendMessage()" class="bg-[#00a884] text-black p-3 rounded-lg hover:bg-[#008f72] transition font-bold px-5">Send</button>
+            <input type="text" id="message-input" placeholder="Type a message..." oninput="updateTypingStatus()" onkeypress="handleKeyPress(event)" class="flex-1 bg-[#2a3942] border-none rounded-lg px-4 py-3 text-white focus:outline-none">
+            <button onclick="sendMessage()" class="bg-[#00a884] text-black p-3 rounded-lg hover:bg-[#008f72] transition font-bold px-5 cursor-pointer">Send</button>
         </div>
     </div>
 
     <script>
         // ==========================================
-        // STEP: APKE FIREBASE CREDENTIALS YAHAN DALO
+        // YOUR FIREBASE CONFIGURATION (PRE-CONFIGURED)
         // ==========================================
         const firebaseConfig = {
             apiKey: "AIzaSyBmVtAF5wQrcrzlfjpTAZoLDFbyrpr9FmY",
@@ -70,32 +70,38 @@
             appId: "1:51435664110:web:feb706ce8a92f182dd39ff"
         };
 
-        // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
         let currentRoom = "";
         let currentUser = "";
+        let typingTimeout = null;
 
         function joinRoom() {
             const room = document.getElementById('room-input').value.trim();
             const name = document.getElementById('name-input').value.trim();
 
             if (!room || !name) {
-                alert("Please fill in both the Room Passcode and your Name!");
+                alert("Please fill in both fields!");
                 return;
             }
 
             currentRoom = room;
             currentUser = name;
 
-            // Switch Screens
             document.getElementById('login-screen').classList.add('hidden');
             document.getElementById('chat-screen').classList.remove('hidden');
             document.getElementById('room-title').innerText = "Room: " + room;
-            document.getElementById('user-display').innerText = "Logged in as: " + name;
 
             loadMessages();
+            listenForTyping();
+        }
+
+        function leaveRoom() {
+            if (currentRoom && currentUser) {
+                db.ref(`rooms/${currentRoom}/typing/${currentUser}`).set(false);
+            }
+            location.reload();
         }
 
         function handleKeyPress(e) {
@@ -104,37 +110,73 @@
             }
         }
 
+        function updateTypingStatus() {
+            if (!currentRoom || !currentUser) return;
+            const typingRef = db.ref(`rooms/${currentRoom}/typing/${currentUser}`);
+            typingRef.set(true);
+
+            clearTimeout(typingTimeout);
+            typingTimeout = setTimeout(() => {
+                typingRef.set(false);
+            }, 2000);
+        }
+
+        function listenForTyping() {
+            db.ref(`rooms/${currentRoom}/typing`).on('value', (snapshot) => {
+                const typingData = snapshot.val() || {};
+                let typingUsers = [];
+
+                for (let user in typingData) {
+                    if (user !== currentUser && typingData[user] === true) {
+                        typingUsers.push(user);
+                    }
+                }
+
+                const statusEl = document.getElementById('typing-status');
+                if (typingUsers.length > 0) {
+                    statusEl.innerText = typingUsers.join(', ') + " is typing...";
+                } else {
+                    statusEl.innerText = "";
+                }
+            });
+        }
+
         function sendMessage() {
             const input = document.getElementById('message-input');
             const text = input.value.trim();
             if (!text) return;
 
+            db.ref(`rooms/${currentRoom}/typing/${currentUser}`).set(false);
+
+            const timeString = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
             const messageData = {
                 sender: currentUser,
                 text: text,
+                time: timeString,
                 timestamp: Date.now()
             };
 
-            // Push to Firebase Realtime Database under room name
-            db.ref('rooms/' + currentRoom).push(messageData);
+            db.ref(`rooms/${currentRoom}/messages`).push(messageData);
             input.value = "";
         }
 
         function loadMessages() {
             const container = document.getElementById('messages-container');
-            
-            // Listen for real-time messages in this room
-            db.ref('rooms/' + currentRoom).on('child_added', (snapshot) => {
+            container.innerHTML = "";
+
+            db.ref(`rooms/${currentRoom}/messages`).on('child_added', (snapshot) => {
                 const msg = snapshot.val();
                 const isMe = msg.sender === currentUser;
 
                 const messageDiv = document.createElement('div');
-                messageDiv.className = `flex ${isMe ? 'justify-end' : 'justify-start'}`;
+                messageDiv.className = `flex ${isMe ? 'justify-end' : 'justify-start'} mb-2`;
 
                 messageDiv.innerHTML = `
                     <div class="max-w-[70%] rounded-lg px-4 py-2 text-sm shadow ${isMe ? 'bg-[#005c4b] text-white rounded-tr-none' : 'bg-[#202c33] text-white rounded-tl-none'}">
                         ${!isMe ? `<p class="text-xs font-bold text-[#00a884] mb-1">${msg.sender}</p>` : ''}
-                        <p class="break-words">${escapeHTML(msg.text)}</p>
+                        <p class="break-words pb-1">${escapeHTML(msg.text)}</p>
+                        <div class="text-[10px] text-[#8696a0] text-right">${msg.time || ''}</div>
                     </div>
                 `;
 
