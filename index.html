@@ -3,419 +3,150 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WhatsApp - Private Secure Chat</title>
-    <!-- Tailwind CSS CDN -->
+    <title>WhatsApp Secret Chat</title>
+    <!-- Tailwind CSS for modern styling -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome for Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Roboto', sans-serif;
-            background-color: #111b21;
-        }
-        /* Custom WhatsApp chat background pattern simulation */
-        .whatsapp-bg {
-            background-color: #0b141a;
-            background-image: radial-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px);
-            background-size: 24px 24px;
-        }
-        /* Custom scrollbar */
-        ::-webkit-scrollbar {
-            width: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 3px;
-        }
-    </style>
+    <!-- Firebase App & Realtime Database CDN -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 </head>
-<body class="h-screen w-screen overflow-hidden flex flex-col items-center justify-center text-gray-100">
+<body class="bg-[#0b141a] text-[#e9edef] h-screen flex flex-col justify-center items-center m-0 font-sans">
 
-    <!-- Notification Toast Modal -->
-    <div id="toast" class="fixed top-5 z-50 transform -translate-y-20 opacity-0 transition-all duration-300 bg-red-600 text-white px-5 py-3 rounded-lg shadow-xl flex items-center space-x-3">
-        <i class="fa-solid fa-circle-exclamation text-lg"></i>
-        <span id="toast-message" class="font-medium">Error message here</span>
+    <!-- LOGIN SCREEN -->
+    <div id="login-screen" class="bg-[#111b21] p-8 rounded-xl shadow-2xl w-96 border border-[#222d34]">
+        <div class="text-center mb-6">
+            <h1 class="text-2xl font-bold text-[#00a884]">Secret WhatsApp</h1>
+            <p class="text-sm text-[#8696a0] mt-1">Enter a secret room code to start chatting</p>
+        </div>
+        <div class="space-y-4">
+            <div>
+                <label class="block text-xs uppercase tracking-wider text-[#8696a0] mb-1">Room Passcode</label>
+                <input type="text" id="room-input" placeholder="e.g. secret-key-99" class="w-full bg-[#2a3942] border-none rounded-lg p-3 text-white focus:outline-none focus:ring-1 focus:ring-[#00a884]">
+            </div>
+            <div>
+                <label class="block text-xs uppercase tracking-wider text-[#8696a0] mb-1">Your Name</label>
+                <input type="text" id="name-input" placeholder="e.g. Alex" class="w-full bg-[#2a3942] border-none rounded-lg p-3 text-white focus:outline-none focus:ring-1 focus:ring-[#00a884]">
+            </div>
+            <button onclick="joinRoom()" class="w-full bg-[#00a884] text-black font-semibold p-3 rounded-lg hover:bg-[#008f72] transition cursor-pointer">
+                Join Chat Room
+            </button>
+        </div>
     </div>
 
-    <!-- APP CONTAINER -->
-    <div id="app-container" class="w-full h-full max-w-5xl md:h-[92vh] md:rounded-xl shadow-2xl flex overflow-hidden border border-gray-800 bg-[#111b21]">
-
-        <!-- LOGIN VIEW (Room Join Screen) -->
-        <div id="login-view" class="w-full h-full flex flex-col items-center justify-center p-6 bg-[#111b21] relative z-10">
-            <div class="max-w-md w-full bg-[#202c33] p-8 rounded-2xl shadow-2xl border border-gray-700">
-                <div class="text-center mb-8">
-                    <div class="inline-flex items-center justify-center w-16 h-16 bg-[#00a884] rounded-full text-white text-3xl mb-4 shadow-lg">
-                        <i class="fa-brands fa-whatsapp"></i>
-                    </div>
-                    <h1 class="text-2xl font-bold text-white tracking-wide">WhatsApp Secure Chat</h1>
-                    <p class="text-sm text-gray-400 mt-2">Enter a shared secret room name and passcode to connect privately with your friend.</p>
-                </div>
-
-                <form id="join-form" class="space-y-5">
-                    <div>
-                        <label class="block text-xs font-semibold uppercase text-gray-400 mb-1">Your Nickname</label>
-                        <div class="relative">
-                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400"><i class="fa-solid fa-user"></i></span>
-                            <input type="text" id="username-input" required placeholder="e.g., Alex" 
-                                class="w-full pl-10 pr-4 py-3 bg-[#2a3942] border border-transparent focus:border-[#00a884] rounded-lg text-white placeholder-gray-500 focus:outline-none transition">
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-semibold uppercase text-gray-400 mb-1">Secret Room Name</label>
-                        <div class="relative">
-                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400"><i class="fa-solid fa-hashtag"></i></span>
-                            <input type="text" id="room-input" required placeholder="e.g., secret-bunker-99" 
-                                class="w-full pl-10 pr-4 py-3 bg-[#2a3942] border border-transparent focus:border-[#00a884] rounded-lg text-white placeholder-gray-500 focus:outline-none transition">
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-semibold uppercase text-gray-400 mb-1">Secret Passcode (PIN)</label>
-                        <div class="relative">
-                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400"><i class="fa-solid fa-key"></i></span>
-                            <input type="password" id="pin-input" required placeholder="e.g., 1234" 
-                                class="w-full pl-10 pr-4 py-3 bg-[#2a3942] border border-transparent focus:border-[#00a884] rounded-lg text-white placeholder-gray-500 focus:outline-none transition">
-                        </div>
-                    </div>
-
-                    <button type="submit" class="w-full py-3 bg-[#00a884] hover:bg-[#008f72] text-white font-semibold rounded-lg shadow-md transition duration-200 flex items-center justify-center space-x-2">
-                        <span>Enter Secret Chat</span>
-                        <i class="fa-solid fa-arrow-right"></i>
-                    </button>
-                </form>
-
-                <div class="mt-6 text-center text-xs text-gray-500 flex items-center justify-center space-x-1">
-                    <i class="fa-solid fa-lock text-[10px]"></i>
-                    <span>End-to-end synchronized via secure Firestore room keys</span>
-                </div>
+    <!-- CHAT SCREEN (Hidden by default) -->
+    <div id="chat-screen" class="hidden w-full max-w-3xl h-full md:h-[90vh] bg-[#111b21] md:rounded-xl shadow-2xl flex flex-col overflow-hidden border border-[#222d34]">
+        <!-- Chat Header -->
+        <div class="bg-[#202c33] px-6 py-4 flex items-center justify-between border-b border-[#222d34]">
+            <div>
+                <h2 id="room-title" class="font-bold text-white text-lg">Room: </h2>
+                <p id="user-display" class="text-xs text-[#8696a0]"></p>
             </div>
+            <button onclick="location.reload()" class="text-xs bg-[#2a3942] hover:bg-[#374248] px-3 py-1.5 rounded text-[#8696a0] hover:text-white transition">Leave Room</button>
         </div>
 
-        <!-- CHAT INTERFACE VIEW (Hidden by default) -->
-        <div id="chat-view" class="w-full h-full flex flex-col hidden relative">
-            
-            <!-- CHAT HEADER -->
-            <header class="h-16 bg-[#202c33] px-4 flex items-center justify-between border-b border-gray-800 z-20">
-                <div class="flex items-center space-x-3">
-                    <div class="relative w-10 h-10 rounded-full bg-[#00a884] flex items-center justify-center text-white font-bold text-lg shadow">
-                        <i class="fa-solid fa-shield-halved"></i>
-                        <span class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-[#202c33] rounded-full"></span>
-                    </div>
-                    <div>
-                        <h2 id="room-title-display" class="font-semibold text-white text-base leading-tight">Room: --</h2>
-                        <p class="text-xs text-gray-400 flex items-center space-x-1 mt-0.5">
-                            <span class="inline-block w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                            <span>Secure & Connected</span>
-                        </p>
-                    </div>
-                </div>
-
-                <div class="flex items-center space-x-4 text-gray-300">
-                    <button id="copy-room-btn" title="Copy Room Invite Link" class="p-2 hover:bg-[#374248] rounded-full transition text-sm flex items-center space-x-1 text-[#00a884] font-medium bg-[#2a3942] px-3">
-                        <i class="fa-solid fa-share-nodes"></i>
-                        <span class="hidden sm:inline">Share Room</span>
-                    </button>
-                    <button id="exit-room-btn" title="Exit Room" class="p-2 hover:bg-red-900/30 text-red-400 hover:text-red-300 rounded-full transition">
-                        <i class="fa-solid fa-arrow-right-from-bracket text-lg"></i>
-                    </button>
-                </div>
-            </header>
-
-            <!-- MESSAGES CONTAINER -->
-            <div id="messages-container" class="flex-1 whatsapp-bg p-4 md:p-6 overflow-y-auto flex flex-col space-y-3 relative">
-                <!-- Empty state placeholder -->
-                <div id="empty-state" class="m-auto text-center py-10 px-4 bg-[#182229]/80 rounded-xl border border-gray-800 max-w-sm">
-                    <div class="w-12 h-12 bg-[#202c33] text-[#00a884] rounded-full flex items-center justify-center mx-auto mb-3 text-xl">
-                        <i class="fa-solid fa-comments"></i>
-                    </div>
-                    <h3 class="text-white font-medium text-sm">No messages in this room yet</h3>
-                    <p class="text-xs text-gray-400 mt-1">Send a message below to start your private conversation with your friend.</p>
-                </div>
-            </div>
-
-            <!-- CHAT INPUT BAR -->
-            <footer class="bg-[#202c33] px-4 py-3 flex items-center space-x-3 border-t border-gray-800 relative z-20">
-                <button type="button" class="text-gray-400 hover:text-white p-2 rounded-full transition text-xl">
-                    <i class="fa-regular fa-face-smile"></i>
-                </button>
-                <button type="button" class="text-gray-400 hover:text-white p-2 rounded-full transition text-lg">
-                    <i class="fa-solid fa-paperclip"></i>
-                </button>
-
-                <form id="message-form" class="flex-1 flex items-center space-x-2">
-                    <input type="text" id="message-input" autocomplete="off" placeholder="Type a message..." 
-                        class="w-full px-4 py-2.5 bg-[#2a3942] text-white placeholder-gray-400 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#00a884] text-sm">
-                    <button type="submit" class="bg-[#00a884] hover:bg-[#008f72] text-white w-10 h-10 rounded-full flex items-center justify-center transition shadow flex-shrink-0">
-                        <i class="fa-solid fa-paper-plane text-sm"></i>
-                    </button>
-                </form>
-            </footer>
-
+        <!-- Messages Box -->
+        <div id="messages-container" class="flex-1 p-6 overflow-y-auto space-y-3 bg-[#0b141a]">
+            <!-- Messages load here -->
         </div>
 
+        <!-- Input Box -->
+        <div class="bg-[#202c33] p-4 flex items-center gap-3 border-t border-[#222d34]">
+            <input type="text" id="message-input" placeholder="Type a message..." onkeypress="handleKeyPress(event)" class="flex-1 bg-[#2a3942] border-none rounded-lg px-4 py-3 text-white focus:outline-none">
+            <button onclick="sendMessage()" class="bg-[#00a884] text-black p-3 rounded-lg hover:bg-[#008f72] transition font-bold px-5">Send</button>
+        </div>
     </div>
 
-    <!-- FIREBASE & CHAT LOGIC SCRIPT -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        // Environment variables provided by environment
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'whatsapp-secret-chat-app';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
-
-        let db = null;
-        let auth = null;
-        let currentUser = null;
-        let unsubscribeMessages = null;
-
-        // State variables
-        let currentRoomId = null;
-        let currentUsername = '';
-        let currentPin = '';
-
-        // DOM Elements
-        const loginView = document.getElementById('login-view');
-        const chatView = document.getElementById('chat-view');
-        const joinForm = document.getElementById('join-form');
-        const usernameInput = document.getElementById('username-input');
-        const roomInput = document.getElementById('room-input');
-        const pinInput = document.getElementById('pin-input');
-        const roomTitleDisplay = document.getElementById('room-title-display');
-        const messagesContainer = document.getElementById('messages-container');
-        const messageForm = document.getElementById('message-form');
-        const messageInput = document.getElementById('message-input');
-        const exitRoomBtn = document.getElementById('exit-room-btn');
-        const copyRoomBtn = document.getElementById('copy-room-btn');
-        const toast = document.getElementById('toast');
-        const toastMessage = document.getElementById('toast-message');
-        const emptyState = document.getElementById('empty-state');
-
-        // Helper function to show custom toasts
-        function showToast(msg) {
-            toastMessage.textContent = msg;
-            toast.classList.remove('-translate-y-20', 'opacity-0');
-            toast.classList.add('translate-y-0', 'opacity-100');
-            setTimeout(() => {
-                toast.classList.remove('translate-y-0', 'opacity-100');
-                toast.classList.add('-translate-y-20', 'opacity-0');
-            }, 3500);
-        }
+    <script>
+        // ==========================================
+        // STEP: APKE FIREBASE CREDENTIALS YAHAN DALO
+        // ==========================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyBmVtAF5wQrcrzlfjpTAZoLDFbyrpr9FmY",
+            authDomain: "secret-d7e10.firebaseapp.com",
+            databaseURL: "https://secret-d7e10-default-rtdb.firebaseio.com",
+            projectId: "secret-d7e10",
+            storageBucket: "secret-d7e10.firebasestorage.app",
+            messagingSenderId: "51435664110",
+            appId: "1:51435664110:web:feb706ce8a92f182dd39ff"
+        };
 
         // Initialize Firebase
-        async function initFirebase() {
-            if (!firebaseConfig) {
-                showToast("Firebase configuration missing.");
-                return;
-            }
-            try {
-                const app = initializeApp(firebaseConfig);
-                db = getFirestore(app);
-                auth = getAuth(app);
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
 
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
-                currentUser = auth.currentUser;
-            } catch (err) {
-                console.error("Firebase init error:", err);
-                showToast("Failed to connect to secure server.");
-            }
-        }
+        let currentRoom = "";
+        let currentUser = "";
 
-        initFirebase();
+        function joinRoom() {
+            const room = document.getElementById('room-input').value.trim();
+            const name = document.getElementById('name-input').value.trim();
 
-        // Check if URL has preset room parameters
-        window.addEventListener('DOMContentLoaded', () => {
-            const urlParams = new URLSearchParams(window.location.search);
-            const r = urlParams.get('room');
-            if (r) {
-                roomInput.value = r;
-            }
-        });
-
-        // Handle Room Join Form Submit
-        joinForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const username = usernameInput.value.trim();
-            const roomName = roomInput.value.trim().toLowerCase().replace(/\s+/g, '-');
-            const pin = pinInput.value.trim();
-
-            if (!username || !roomName || !pin) {
-                showToast("Please fill in all fields.");
+            if (!room || !name) {
+                alert("Please fill in both the Room Passcode and your Name!");
                 return;
             }
 
-            if (!db || !currentUser) {
-                showToast("Connecting to secure server, please wait a moment...");
-                return;
-            }
+            currentRoom = room;
+            currentUser = name;
 
-            currentUsername = username;
-            currentRoomId = `${roomName}_${pin}`; // Combine room name & PIN as collection discriminator for privacy
-            roomTitleDisplay.textContent = `#${roomName}`;
+            // Switch Screens
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('chat-screen').classList.remove('hidden');
+            document.getElementById('room-title').innerText = "Room: " + room;
+            document.getElementById('user-display').innerText = "Logged in as: " + name;
 
-            // Switch UI views smoothly
-            loginView.classList.add('hidden');
-            chatView.classList.remove('hidden');
-
-            // Load messages for this room
             loadMessages();
-        });
-
-        // Load and Listen to Realtime Messages
-        function loadMessages() {
-            if (!db) return;
-
-            // Strict path rule: /artifacts/{appId}/public/data/{collectionName}
-            const collectionPath = `artifacts/${appId}/public/data/room_${currentRoomId}`;
-            const messagesQuery = query(collection(db, collectionPath));
-
-            if (unsubscribeMessages) {
-                unsubscribeMessages();
-            }
-
-            unsubscribeMessages = onSnapshot(messagesQuery, (snapshot) => {
-                const messages = [];
-                snapshot.forEach((docSnap) => {
-                    messages.push({ id: docSnap.id, ...docSnap.data() });
-                });
-
-                // Sort messages by timestamp in JS memory (Rule 2 safeguard)
-                messages.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
-
-                renderMessages(messages);
-            }, (error) => {
-                console.error("Error fetching messages:", error);
-                showToast("Error synchronizing messages.");
-            });
         }
 
-        // Render Messages in UI
-        function renderMessages(messages) {
-            // Remove previous message elements except empty state
-            const existingBubbles = messagesContainer.querySelectorAll('.message-bubble');
-            existingBubbles.forEach(el => el.remove());
-
-            if (messages.length === 0) {
-                if (emptyState) emptyState.style.display = 'block';
-                return;
+        function handleKeyPress(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
             }
+        }
 
-            if (emptyState) emptyState.style.display = 'none';
+        function sendMessage() {
+            const input = document.getElementById('message-input');
+            const text = input.value.trim();
+            if (!text) return;
 
-            messages.forEach((msg) => {
-                const isMe = msg.senderId === currentUser.uid || msg.username === currentUsername;
-                
-                const timeString = msg.createdAt ? new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Just now';
+            const messageData = {
+                sender: currentUser,
+                text: text,
+                timestamp: Date.now()
+            };
 
-                const bubbleDiv = document.createElement('div');
-                bubbleDiv.className = `message-bubble flex flex-col max-w-[75%] md:max-w-[60%] my-1 ${isMe ? 'ml-auto items-end' : 'mr-auto items-start'}`;
+            // Push to Firebase Realtime Database under room name
+            db.ref('rooms/' + currentRoom).push(messageData);
+            input.value = "";
+        }
 
-                bubbleDiv.innerHTML = `
-                    <div class="px-3.5 py-2 rounded-lg text-sm shadow-md relative ${
-                        isMe 
-                            ? 'bg-[#005c4b] text-white rounded-tr-none' 
-                            : 'bg-[#202c33] text-gray-100 rounded-tl-none border border-gray-700/50'
-                    }">
-                        ${!isMe ? `<div class="text-[11px] font-bold text-[#00a884] mb-0.5">${escapeHtml(msg.username)}</div>` : ''}
-                        <div class="break-words leading-relaxed pr-8">${escapeHtml(msg.text)}</div>
-                        <div class="absolute bottom-1 right-2 flex items-center space-x-1 text-[10px] text-gray-300 select-none">
-                            <span>${timeString}</span>
-                            ${isMe ? '<i class="fa-solid fa-check-double text-[#53bdeb] text-[11px]"></i>' : ''}
-                        </div>
+        function loadMessages() {
+            const container = document.getElementById('messages-container');
+            
+            // Listen for real-time messages in this room
+            db.ref('rooms/' + currentRoom).on('child_added', (snapshot) => {
+                const msg = snapshot.val();
+                const isMe = msg.sender === currentUser;
+
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `flex ${isMe ? 'justify-end' : 'justify-start'}`;
+
+                messageDiv.innerHTML = `
+                    <div class="max-w-[70%] rounded-lg px-4 py-2 text-sm shadow ${isMe ? 'bg-[#005c4b] text-white rounded-tr-none' : 'bg-[#202c33] text-white rounded-tl-none'}">
+                        ${!isMe ? `<p class="text-xs font-bold text-[#00a884] mb-1">${msg.sender}</p>` : ''}
+                        <p class="break-words">${escapeHTML(msg.text)}</p>
                     </div>
                 `;
 
-                messagesContainer.appendChild(bubbleDiv);
+                container.appendChild(messageDiv);
+                container.scrollTop = container.scrollHeight;
             });
-
-            // Auto-scroll to bottom
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }
 
-        // Send Message Handler
-        messageForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const text = messageInput.value.trim();
-            if (!text || !db || !currentUser || !currentRoomId) return;
-
-            messageInput.value = '';
-
-            try {
-                const collectionPath = `artifacts/${appId}/public/data/room_${currentRoomId}`;
-                await addDoc(collection(db, collectionPath), {
-                    text: text,
-                    username: currentUsername,
-                    senderId: currentUser.uid,
-                    createdAt: Date.now()
-                });
-            } catch (err) {
-                console.error("Error sending message:", err);
-                showToast("Failed to send message. Try again.");
-            }
-        });
-
-        // Exit Room Button
-        exitRoomBtn.addEventListener('click', () => {
-            if (unsubscribeMessages) {
-                unsubscribeMessages();
-            }
-            currentRoomId = null;
-            chatView.classList.add('hidden');
-            loginView.classList.remove('hidden');
-            messageInput.value = '';
-        });
-
-        // Copy Share Room Link
-        copyRoomBtn.addEventListener('click', () => {
-            const rawRoomName = roomInput.value.trim();
-            const shareUrl = `${window.location.origin}${window.location.pathname}?room=${encodeURIComponent(rawRoomName)}`;
-            
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(shareUrl).then(() => {
-                    showToast("Room link copied to clipboard!");
-                }).catch(() => {
-                    fallbackCopy(shareUrl);
-                });
-            } else {
-                fallbackCopy(shareUrl);
-            }
-        });
-
-        function fallbackCopy(text) {
-            const textArea = document.createElement("textarea");
-            textArea.value = text;
-            textArea.style.position = "fixed";
-            document.body.appendChild(textArea);
-            textArea.focus();
-            textArea.select();
-            try {
-                document.execCommand('copy');
-                showToast("Room link copied to clipboard!");
-            } catch (err) {
-                showToast("Could not copy link.");
-            }
-            document.body.removeChild(textArea);
-        }
-
-        // Security Helper
-        function escapeHtml(unsafe) {
-            return unsafe
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(>g, "&gt;")
-                .replace(/"/g, "&quot;")
-                .replace(/'/g, "&#039;");
+        function escapeHTML(str) {
+            return str.replace(/[&<>'"]/g, 
+                tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+            );
         }
     </script>
 </body>
