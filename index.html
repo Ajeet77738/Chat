@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Advanced WhatsApp Secret Chat</title>
+    <title>WhatsApp Secret Chat</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Firebase SDK -->
+    <!-- Firebase SDK (Compat Version) -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <style>
@@ -59,7 +59,7 @@
         </div>
     </div>
 
-    <!-- CHAT SCREEN (Hidden by default) -->
+    <!-- CHAT SCREEN -->
     <div id="chat-screen" class="hidden w-full max-w-4xl h-full md:h-[92vh] bg-[#111b21] md:rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-[#222d34] shadow-[0_0_40px_rgba(0,0,0,0.8)]">
         <!-- Chat Header -->
         <div class="bg-[#202c33] px-5 py-3 flex items-center justify-between border-b border-[#2a3942]">
@@ -67,7 +67,7 @@
                 <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-[#00a884] to-[#25d366] flex items-center justify-center text-black font-bold text-base shadow">🔒</div>
                 <div>
                     <h2 id="room-title" class="font-bold text-white text-sm md:text-base tracking-wide">Room: </h2>
-                    <p id="typing-status" class="text-[11px] text-[#00a884] h-3.5 font-medium animate-pulse"></p>
+                    <p id="typing-status" class="text-[11px] text-[#00a884] h-3.5 font-medium animate-pulse">🟢 Online</p>
                 </div>
             </div>
             <button onclick="leaveRoom()" class="text-xs bg-[#2a3942] hover:bg-[#374248] text-[#8696a0] hover:text-white px-3 py-1.5 rounded-lg transition font-semibold cursor-pointer border border-[#374248]">Leave Room</button>
@@ -86,7 +86,7 @@
             </button>
             <input type="text" id="message-input" placeholder="Type a message" oninput="updateTypingStatus()" onkeypress="handleKeyPress(event)" class="flex-1 bg-[#2a3942] text-white text-sm rounded-lg px-4 py-2.5 focus:outline-none placeholder-[#8696a0]">
             <button onclick="sendMessage()" class="text-[#8696a0] hover:text-[#00a884] p-2 rounded-full transition cursor-pointer text-xl flex items-center justify-center" title="Send Message">
-                <svg viewBox="0 0 24 24" height="24" width="24" preserveAspectRatio="xMidYMid meet" class="" version="1.1" x="0px" y="0px" enable-background="new 0 0 24 24" xml:space="preserve"><path fill="currentColor" d="M1.101,21.757L23.8,12.028L1.101,2.3l0.011,7.912l13.613,1.816L1.112,13.845 L1.101,21.757z"></path></svg>
+                <svg viewBox="0 0 24 24" height="24" width="24" preserveAspectRatio="xMidYMid meet" version="1.1" x="0px" y="0px" enable-background="new 0 0 24 24" xml:space="preserve"><path fill="currentColor" d="M1.101,21.757L23.8,12.028L1.101,2.3l0.011,7.912l13.613,1.816L1.112,13.845 L1.101,21.757z"></path></svg>
             </button>
         </div>
     </div>
@@ -133,25 +133,27 @@
             return nameColors[name];
         }
 
+        // Clean room name to make it safe for Firebase paths (removes special chars/spaces)
+        function sanitizeRoomName(room) {
+            return room.replace(/[.#$\/\[\]]/g, "_").toLowerCase();
+        }
+
         function joinRoom() {
-            const room = document.getElementById('room-input').value.trim();
+            const rawRoom = document.getElementById('room-input').value.trim();
             const name = document.getElementById('name-input').value.trim();
 
-            if (!room || !name) {
+            if (!rawRoom || !name) {
                 alert("Please fill in both fields!");
                 return;
             }
 
-            currentRoom = room;
+            currentRoom = sanitizeRoomName(rawRoom);
             currentUser = name;
 
             document.getElementById('login-screen').classList.add('hidden');
             document.getElementById('chat-screen').classList.remove('hidden');
-            document.getElementById('room-title').innerText = "Room: " + room;
+            document.getElementById('room-title').innerText = "Room: " + rawRoom;
 
-            // Mark existing undelivered messages as delivered & read
-            db.ref(`rooms/${currentRoom}/messages`).once('snapshot', () => {});
-            
             loadMessages();
             listenForTyping();
             updatePresence(true);
@@ -212,28 +214,6 @@
                     statusEl.innerText = "🟢 Online";
                 }
             });
-
-            // Listen for peer presence to update read/delivered ticks
-            db.ref(`rooms/${currentRoom}/presence`).on('value', (snapshot) => {
-                const presence = snapshot.val() || {};
-                let peerActive = false;
-                for (let user in presence) {
-                    if (user !== currentUser && presence[user].online) {
-                        peerActive = true;
-                    }
-                }
-                if (peerActive) {
-                    // Automatically mark unread messages from current user as read when peer is online
-                    db.ref(`rooms/${currentRoom}/messages`).once('value', (snap) => {
-                        snap.forEach((childSnap) => {
-                            const msg = childSnap.val();
-                            if (msg.sender === currentUser && msg.status !== 'read') {
-                                db.ref(`rooms/${currentRoom}/messages/${childSnap.key}`).update({ status: 'read' });
-                            }
-                        });
-                    });
-                }
-            });
         }
 
         function sendMessage() {
@@ -249,11 +229,13 @@
                 text: text,
                 type: 'text',
                 time: timeString,
-                status: 'delivered', // delivered or read
+                status: 'delivered',
                 timestamp: Date.now()
             };
 
-            db.ref(`rooms/${currentRoom}/messages`).push(messageData);
+            db.ref(`rooms/${currentRoom}/messages`).push(messageData).catch((error) => {
+                alert("Failed to send message: " + error.message);
+            });
             input.value = "";
         }
 
@@ -293,7 +275,10 @@
             const container = document.getElementById('messages-container');
             container.innerHTML = "";
 
-            db.ref(`rooms/${currentRoom}/messages`).on('child_added', (snapshot) => {
+            // Use 'limitToLast(50)' to load recent messages smoothly
+            const messagesRef = db.ref(`rooms/${currentRoom}/messages`).limitToLast(50);
+
+            messagesRef.on('child_added', (snapshot) => {
                 renderSingleMessage(snapshot.key, snapshot.val());
             });
 
@@ -323,7 +308,6 @@
             const isMe = msg.sender === currentUser;
             const userColor = getColorForUser(msg.sender);
 
-            // Check if deleted for me
             if (msg.deletedForMe && msg.deletedForMe[currentUser]) return;
 
             const messageDiv = document.createElement('div');
@@ -354,14 +338,12 @@
                 contentHTML = `<p class="break-words pb-1 text-sm md:text-base leading-relaxed">${escapeHTML(msg.text || '')}</p>`;
             }
 
-            // Tick marks for sender
             let ticks = '';
             if (isMe && !msg.deletedForEveryone) {
                 const tickColor = msg.status === 'read' ? 'text-[#34b7f1]' : 'text-[#8696a0]';
                 ticks = `<span class="tick-mark ml-1 ${tickColor} font-bold">✓✓</span>`;
             }
 
-            // Delete trigger button on hover
             const deleteTrigger = !msg.deletedForEveryone ? `
                 <button onclick="openDeleteModal('${key}')" class="delete-btn opacity-0 transition absolute top-1 ${isMe ? '-left-7' : '-right-7'} bg-[#202c33] hover:bg-[#2a3942] text-[#8696a0] hover:text-white p-1 rounded-full text-xs shadow">
                     🗑️
@@ -398,12 +380,10 @@
             if (!selectedMessageKey) return;
 
             if (type === 'me') {
-                // Hide only for current user
                 db.ref(`rooms/${currentRoom}/messages/${selectedMessageKey}/deletedForMe/${currentUser}`).set(true);
                 const el = document.getElementById(`msg-${selectedMessageKey}`);
                 if (el) el.remove();
             } else if (type === 'everyone') {
-                // Delete for everyone in the room
                 db.ref(`rooms/${currentRoom}/messages/${selectedMessageKey}`).update({
                     deletedForEveryone: true,
                     text: "",
