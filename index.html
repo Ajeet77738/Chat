@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WhatsApp Secret Chat</title>
+    <title>Advanced WhatsApp Secret Chat</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Firebase SDK -->
@@ -16,6 +16,9 @@
         }
         .message-anim {
             animation: fadeIn 0.2s ease-out forwards;
+        }
+        .msg-container:hover .delete-btn {
+            opacity: 1;
         }
         ::-webkit-scrollbar {
             width: 6px;
@@ -75,30 +78,32 @@
             <!-- Dynamic messages load here -->
         </div>
 
-        <!-- Input Box (WhatsApp Exact Styling & Button Sizes) -->
+        <!-- Input Box -->
         <div class="bg-[#202c33] px-4 py-2.5 flex items-center gap-2 border-t border-[#2a3942]">
-            <!-- Hidden File Input -->
             <input type="file" id="file-input" class="hidden" onchange="handleFileSelect(event)">
-            
-            <!-- WhatsApp Attachment Button (Compact Size) -->
             <button onclick="document.getElementById('file-input').click()" class="text-[#8696a0] hover:text-[#00a884] p-2 rounded-full transition cursor-pointer text-xl flex items-center justify-center" title="Attach File / Image">
                 📎
             </button>
-
-            <!-- Message Text Input -->
             <input type="text" id="message-input" placeholder="Type a message" oninput="updateTypingStatus()" onkeypress="handleKeyPress(event)" class="flex-1 bg-[#2a3942] text-white text-sm rounded-lg px-4 py-2.5 focus:outline-none placeholder-[#8696a0]">
-
-            <!-- WhatsApp Send Button (Compact Size) -->
             <button onclick="sendMessage()" class="text-[#8696a0] hover:text-[#00a884] p-2 rounded-full transition cursor-pointer text-xl flex items-center justify-center" title="Send Message">
                 <svg viewBox="0 0 24 24" height="24" width="24" preserveAspectRatio="xMidYMid meet" class="" version="1.1" x="0px" y="0px" enable-background="new 0 0 24 24" xml:space="preserve"><path fill="currentColor" d="M1.101,21.757L23.8,12.028L1.101,2.3l0.011,7.912l13.613,1.816L1.112,13.845 L1.101,21.757z"></path></svg>
             </button>
         </div>
     </div>
 
+    <!-- DELETE OPTIONS MODAL -->
+    <div id="delete-modal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center">
+        <div class="bg-[#202c33] border border-[#2a3942] p-6 rounded-2xl w-80 shadow-2xl text-center space-y-4">
+            <h3 class="font-bold text-white text-base">Delete Message?</h3>
+            <div class="space-y-2">
+                <button onclick="confirmDelete('me')" class="w-full bg-[#2a3942] hover:bg-[#374248] text-white py-2.5 rounded-xl font-medium transition text-sm">Delete for Me</button>
+                <button onclick="confirmDelete('everyone')" class="w-full bg-red-600/20 hover:bg-red-600/30 text-red-400 border border-red-500/30 py-2.5 rounded-xl font-medium transition text-sm">Delete for Everyone</button>
+                <button onclick="closeDeleteModal()" class="w-full text-[#8696a0] hover:text-white py-2 text-sm">Cancel</button>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // ==========================================
-        // FIREBASE CONFIGURATION (PRE-CONFIGURED)
-        // ==========================================
         const firebaseConfig = {
             apiKey: "AIzaSyBmVtAF5wQrcrzlfjpTAZoLDFbyrpr9FmY",
             authDomain: "secret-d7e10.firebaseapp.com",
@@ -115,6 +120,7 @@
         let currentRoom = "";
         let currentUser = "";
         let typingTimeout = null;
+        let selectedMessageKey = null;
 
         const nameColors = {};
         const colorPalette = ['#00a884', '#34b7f1', '#ffbc42', '#ff5722', '#ab47bc', '#26a69a', '#ec407a'];
@@ -143,14 +149,31 @@
             document.getElementById('chat-screen').classList.remove('hidden');
             document.getElementById('room-title').innerText = "Room: " + room;
 
+            // Mark existing undelivered messages as delivered & read
+            db.ref(`rooms/${currentRoom}/messages`).once('snapshot', () => {});
+            
             loadMessages();
             listenForTyping();
+            updatePresence(true);
         }
 
-        function leaveRoom() {
+        function updatePresence(isOnline) {
+            if (!currentRoom || !currentUser) return;
+            db.ref(`rooms/${currentRoom}/presence/${currentUser}`).set({
+                online: isOnline,
+                lastSeen: Date.now()
+            });
+        }
+
+        window.addEventListener('beforeunload', () => {
             if (currentRoom && currentUser) {
                 db.ref(`rooms/${currentRoom}/typing/${currentUser}`).set(false);
+                db.ref(`rooms/${currentRoom}/presence/${currentUser}`).update({ online: false });
             }
+        });
+
+        function leaveRoom() {
+            updatePresence(false);
             location.reload();
         }
 
@@ -189,6 +212,28 @@
                     statusEl.innerText = "🟢 Online";
                 }
             });
+
+            // Listen for peer presence to update read/delivered ticks
+            db.ref(`rooms/${currentRoom}/presence`).on('value', (snapshot) => {
+                const presence = snapshot.val() || {};
+                let peerActive = false;
+                for (let user in presence) {
+                    if (user !== currentUser && presence[user].online) {
+                        peerActive = true;
+                    }
+                }
+                if (peerActive) {
+                    // Automatically mark unread messages from current user as read when peer is online
+                    db.ref(`rooms/${currentRoom}/messages`).once('value', (snap) => {
+                        snap.forEach((childSnap) => {
+                            const msg = childSnap.val();
+                            if (msg.sender === currentUser && msg.status !== 'read') {
+                                db.ref(`rooms/${currentRoom}/messages/${childSnap.key}`).update({ status: 'read' });
+                            }
+                        });
+                    });
+                }
+            });
         }
 
         function sendMessage() {
@@ -204,6 +249,7 @@
                 text: text,
                 type: 'text',
                 time: timeString,
+                status: 'delivered', // delivered or read
                 timestamp: Date.now()
             };
 
@@ -233,6 +279,7 @@
                     fileType: file.type,
                     type: file.type.startsWith('image/') ? 'image' : 'file',
                     time: timeString,
+                    status: 'delivered',
                     timestamp: Date.now()
                 };
 
@@ -247,49 +294,129 @@
             container.innerHTML = "";
 
             db.ref(`rooms/${currentRoom}/messages`).on('child_added', (snapshot) => {
-                const msg = snapshot.val();
-                const isMe = msg.sender === currentUser;
-                const userColor = getColorForUser(msg.sender);
+                renderSingleMessage(snapshot.key, snapshot.val());
+            });
 
-                const messageDiv = document.createElement('div');
-                messageDiv.className = `flex ${isMe ? 'justify-end' : 'justify-start'} message-anim`;
-
-                let contentHTML = '';
-                if (msg.type === 'image') {
-                    contentHTML = `
-                        <a href="${msg.fileData}" target="_blank" class="block mb-1">
-                            <img src="${msg.fileData}" class="max-w-xs rounded-xl max-h-60 object-cover border border-white/10 shadow-md">
-                        </a>
-                        <p class="text-[10px] text-[#8696a0] truncate max-w-xs">${escapeHTML(msg.fileName || '')}</p>
-                    `;
-                } else if (msg.type === 'file') {
-                    contentHTML = `
-                        <div class="flex items-center gap-3 mb-1 bg-[#111b21]/80 p-2.5 rounded-xl border border-[#374248]">
-                            <span class="text-2xl">📄</span>
-                            <div class="overflow-hidden">
-                                <p class="text-xs font-bold truncate max-w-[170px] text-white">${escapeHTML(msg.fileName || 'Document')}</p>
-                                <a href="${msg.fileData}" download="${msg.fileName || 'file'}" class="text-[11px] text-[#00a884] font-semibold hover:underline">Download File 📥</a>
-                            </div>
-                        </div>
-                    `;
-                } else {
-                    contentHTML = `<p class="break-words pb-1 text-sm md:text-base leading-relaxed">${escapeHTML(msg.text || '')}</p>`;
+            db.ref(`rooms/${currentRoom}/messages`).on('child_changed', (snapshot) => {
+                const existingEl = document.getElementById(`msg-${snapshot.key}`);
+                if (existingEl) {
+                    const msg = snapshot.val();
+                    if (msg.deletedForEveryone) {
+                        existingEl.innerHTML = `<p class="italic text-[#8696a0] text-xs">🔒 This message was deleted</p>`;
+                    } else if (msg.status) {
+                        const tickEl = existingEl.querySelector('.tick-mark');
+                        if (tickEl) {
+                            tickEl.innerHTML = msg.status === 'read' ? '<span class="text-[#34b7f1]">✓✓</span>' : '<span>✓✓</span>';
+                        }
+                    }
                 }
+            });
 
-                messageDiv.innerHTML = `
-                    <div class="max-w-[75%] md:max-w-[65%] rounded-2xl px-4 py-2 shadow-lg ${isMe ? 'bg-[#005c4b] text-white rounded-tr-none' : 'bg-[#202c33] text-white rounded-tl-none'}">
-                        ${!isMe ? `<p class="text-xs font-bold mb-1" style="color: ${userColor};">${msg.sender}</p>` : ''}
-                        ${contentHTML}
-                        <div class="text-[10px] text-[#8696a0] text-right mt-1 font-medium">${msg.time || ''}</div>
-                    </div>
-                `;
-
-                container.appendChild(messageDiv);
-                container.scrollTop = container.scrollHeight;
+            db.ref(`rooms/${currentRoom}/messages`).on('child_removed', (snapshot) => {
+                const existingEl = document.getElementById(`msg-${snapshot.key}`);
+                if (existingEl) existingEl.remove();
             });
         }
 
+        function renderSingleMessage(key, msg) {
+            const container = document.getElementById('messages-container');
+            const isMe = msg.sender === currentUser;
+            const userColor = getColorForUser(msg.sender);
+
+            // Check if deleted for me
+            if (msg.deletedForMe && msg.deletedForMe[currentUser]) return;
+
+            const messageDiv = document.createElement('div');
+            messageDiv.id = `msg-${key}`;
+            messageDiv.className = `flex ${isMe ? 'justify-end' : 'justify-start'} message-anim relative msg-container`;
+
+            let contentHTML = '';
+            if (msg.deletedForEveryone) {
+                contentHTML = `<p class="italic text-[#8696a0] text-xs">🔒 This message was deleted</p>`;
+            } else if (msg.type === 'image') {
+                contentHTML = `
+                    <a href="${msg.fileData}" target="_blank" class="block mb-1">
+                        <img src="${msg.fileData}" class="max-w-xs rounded-xl max-h-60 object-cover border border-white/10 shadow-md">
+                    </a>
+                    <p class="text-[10px] text-[#8696a0] truncate max-w-xs">${escapeHTML(msg.fileName || '')}</p>
+                `;
+            } else if (msg.type === 'file') {
+                contentHTML = `
+                    <div class="flex items-center gap-3 mb-1 bg-[#111b21]/80 p-2.5 rounded-xl border border-[#374248]">
+                        <span class="text-2xl">📄</span>
+                        <div class="overflow-hidden">
+                            <p class="text-xs font-bold truncate max-w-[170px] text-white">${escapeHTML(msg.fileName || 'Document')}</p>
+                            <a href="${msg.fileData}" download="${msg.fileName || 'file'}" class="text-[11px] text-[#00a884] font-semibold hover:underline">Download File 📥</a>
+                        </div>
+                    </div>
+                `;
+            } else {
+                contentHTML = `<p class="break-words pb-1 text-sm md:text-base leading-relaxed">${escapeHTML(msg.text || '')}</p>`;
+            }
+
+            // Tick marks for sender
+            let ticks = '';
+            if (isMe && !msg.deletedForEveryone) {
+                const tickColor = msg.status === 'read' ? 'text-[#34b7f1]' : 'text-[#8696a0]';
+                ticks = `<span class="tick-mark ml-1 ${tickColor} font-bold">✓✓</span>`;
+            }
+
+            // Delete trigger button on hover
+            const deleteTrigger = !msg.deletedForEveryone ? `
+                <button onclick="openDeleteModal('${key}')" class="delete-btn opacity-0 transition absolute top-1 ${isMe ? '-left-7' : '-right-7'} bg-[#202c33] hover:bg-[#2a3942] text-[#8696a0] hover:text-white p-1 rounded-full text-xs shadow">
+                    🗑️
+                </button>
+            ` : '';
+
+            messageDiv.innerHTML = `
+                <div class="relative max-w-[75%] md:max-w-[65%] rounded-2xl px-4 py-2 shadow-lg ${isMe ? 'bg-[#005c4b] text-white rounded-tr-none' : 'bg-[#202c33] text-white rounded-tl-none'}">
+                    ${deleteTrigger}
+                    ${!isMe ? `<p class="text-xs font-bold mb-1" style="color: ${userColor};">${msg.sender}</p>` : ''}
+                    ${contentHTML}
+                    <div class="text-[10px] text-[#8696a0] text-right mt-1 font-medium flex items-center justify-end gap-1">
+                        <span>${msg.time || ''}</span>
+                        ${ticks}
+                    </div>
+                </div>
+            `;
+
+            container.appendChild(messageDiv);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function openDeleteModal(msgKey) {
+            selectedMessageKey = msgKey;
+            document.getElementById('delete-modal').classList.remove('hidden');
+        }
+
+        function closeDeleteModal() {
+            selectedMessageKey = null;
+            document.getElementById('delete-modal').classList.add('hidden');
+        }
+
+        function confirmDelete(type) {
+            if (!selectedMessageKey) return;
+
+            if (type === 'me') {
+                // Hide only for current user
+                db.ref(`rooms/${currentRoom}/messages/${selectedMessageKey}/deletedForMe/${currentUser}`).set(true);
+                const el = document.getElementById(`msg-${selectedMessageKey}`);
+                if (el) el.remove();
+            } else if (type === 'everyone') {
+                // Delete for everyone in the room
+                db.ref(`rooms/${currentRoom}/messages/${selectedMessageKey}`).update({
+                    deletedForEveryone: true,
+                    text: "",
+                    fileData: "",
+                    fileName: ""
+                });
+            }
+
+            closeDeleteModal();
+        }
+
         function escapeHTML(str) {
+            if (!str) return '';
             return str.replace(/[&<>'"]/g, 
                 tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
             );
