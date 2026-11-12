@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WhatsApp Secret Chat</title>
+    <title>Group WhatsApp Secret Chat</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Firebase SDK (Compat Version) -->
+    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <style>
@@ -17,7 +17,7 @@
         .message-anim {
             animation: fadeIn 0.2s ease-out forwards;
         }
-        .msg-container:hover .delete-btn {
+        .msg-container:hover .msg-actions {
             opacity: 1;
         }
         ::-webkit-scrollbar {
@@ -40,21 +40,21 @@
     <!-- LOGIN SCREEN -->
     <div id="login-screen" class="bg-[#111b21]/95 backdrop-blur-xl p-8 rounded-2xl shadow-2xl w-96 border border-[#2a3942]/60 shadow-[0_0_30px_rgba(0,168,132,0.1)]">
         <div class="text-center mb-6">
-            <div class="inline-block p-3 rounded-full bg-[#00a884]/10 text-[#00a884] text-3xl mb-2 shadow-[0_0_15px_rgba(0,168,132,0.3)]">💬</div>
-            <h1 class="text-2xl font-black tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-[#00a884] to-[#25d366]">Secret WhatsApp</h1>
-            <p class="text-xs text-[#8696a0] mt-1">Enter your secret sanctuary</p>
+            <div class="inline-block p-3 rounded-full bg-[#00a884]/10 text-[#00a884] text-3xl mb-2 shadow-[0_0_15px_rgba(0,168,132,0.3)]">👥</div>
+            <h1 class="text-2xl font-black tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-[#00a884] to-[#25d366]">Group Secret Chat</h1>
+            <p class="text-xs text-[#8696a0] mt-1">Enter room & your name</p>
         </div>
         <div class="space-y-4">
             <div>
                 <label class="block text-[11px] font-bold uppercase tracking-wider text-[#00a884] mb-1">Room Passcode</label>
-                <input type="text" id="room-input" placeholder="e.g. secret-room-99" class="w-full bg-[#2a3942]/50 border border-[#374248] rounded-xl p-3 text-white focus:outline-none focus:border-[#00a884] focus:ring-1 focus:ring-[#00a884] transition">
+                <input type="text" id="room-input" placeholder="e.g. group-room-123" class="w-full bg-[#2a3942]/50 border border-[#374248] rounded-xl p-3 text-white focus:outline-none focus:border-[#00a884] focus:ring-1 focus:ring-[#00a884] transition">
             </div>
             <div>
                 <label class="block text-[11px] font-bold uppercase tracking-wider text-[#00a884] mb-1">Your Nickname</label>
-                <input type="text" id="name-input" placeholder="e.g. Shadow" class="w-full bg-[#2a3942]/50 border border-[#374248] rounded-xl p-3 text-white focus:outline-none focus:border-[#00a884] focus:ring-1 focus:ring-[#00a884] transition">
+                <input type="text" id="name-input" placeholder="e.g. Alex" class="w-full bg-[#2a3942]/50 border border-[#374248] rounded-xl p-3 text-white focus:outline-none focus:border-[#00a884] focus:ring-1 focus:ring-[#00a884] transition">
             </div>
             <button onclick="joinRoom()" class="w-full bg-gradient-to-r from-[#00a884] to-[#25d366] text-black font-bold py-3 rounded-xl hover:opacity-90 shadow-[0_4px_20px_rgba(0,168,132,0.4)] transition cursor-pointer active:scale-95">
-                Join Secure Room 🚀
+                Join Group 🚀
             </button>
         </div>
     </div>
@@ -64,10 +64,10 @@
         <!-- Chat Header -->
         <div class="bg-[#202c33] px-5 py-3 flex items-center justify-between border-b border-[#2a3942]">
             <div class="flex items-center gap-3">
-                <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-[#00a884] to-[#25d366] flex items-center justify-center text-black font-bold text-base shadow">🔒</div>
+                <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-[#00a884] to-[#25d366] flex items-center justify-center text-black font-bold text-base shadow">💬</div>
                 <div>
                     <h2 id="room-title" class="font-bold text-white text-sm md:text-base tracking-wide">Room: </h2>
-                    <p id="typing-status" class="text-[11px] text-[#00a884] h-3.5 font-medium animate-pulse">🟢 Online</p>
+                    <p id="typing-status" class="text-[11px] text-[#00a884] h-3.5 font-medium animate-pulse">🟢 Active</p>
                 </div>
             </div>
             <button onclick="leaveRoom()" class="text-xs bg-[#2a3942] hover:bg-[#374248] text-[#8696a0] hover:text-white px-3 py-1.5 rounded-lg transition font-semibold cursor-pointer border border-[#374248]">Leave Room</button>
@@ -86,8 +86,29 @@
             </button>
             <input type="text" id="message-input" placeholder="Type a message" oninput="updateTypingStatus()" onkeypress="handleKeyPress(event)" class="flex-1 bg-[#2a3942] text-white text-sm rounded-lg px-4 py-2.5 focus:outline-none placeholder-[#8696a0]">
             <button onclick="sendMessage()" class="text-[#8696a0] hover:text-[#00a884] p-2 rounded-full transition cursor-pointer text-xl flex items-center justify-center" title="Send Message">
-                <svg viewBox="0 0 24 24" height="24" width="24" preserveAspectRatio="xMidYMid meet" version="1.1" x="0px" y="0px" enable-background="new 0 0 24 24" xml:space="preserve"><path fill="currentColor" d="M1.101,21.757L23.8,12.028L1.101,2.3l0.011,7.912l13.613,1.816L1.112,13.845 L1.101,21.757z"></path></svg>
+                <svg viewBox="0 0 24 24" height="24" width="24" preserveAspectRatio="xMidYMid meet" version="1.1" x="0px" y="0px"><path fill="currentColor" d="M1.101,21.757L23.8,12.028L1.101,2.3l0.011,7.912l13.613,1.816L1.112,13.845 L1.101,21.757z"></path></svg>
             </button>
+        </div>
+    </div>
+
+    <!-- MESSAGE INFO MODAL -->
+    <div id="info-modal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-[#202c33] border border-[#2a3942] p-6 rounded-2xl w-full max-w-md shadow-2xl space-y-4">
+            <div class="flex justify-between items-center border-b border-[#2a3942] pb-3">
+                <h3 class="font-bold text-white text-base">Message Info</h3>
+                <button onclick="closeInfoModal()" class="text-[#8696a0] hover:text-white text-lg font-bold">&times;</button>
+            </div>
+            <div class="space-y-4 max-h-60 overflow-y-auto">
+                <div>
+                    <p class="text-xs font-bold text-[#00a884] uppercase tracking-wider mb-2">Read by</p>
+                    <div id="read-by-list" class="space-y-1 text-sm text-white"></div>
+                </div>
+                <div>
+                    <p class="text-xs font-bold text-[#8696a0] uppercase tracking-wider mb-2">Delivered to</p>
+                    <div id="delivered-to-list" class="space-y-1 text-sm text-white"></div>
+                </div>
+            </div>
+            <button onclick="closeInfoModal()" class="w-full bg-[#2a3942] hover:bg-[#374248] text-white py-2 rounded-xl text-sm transition">Close</button>
         </div>
     </div>
 
@@ -103,7 +124,7 @@
         </div>
     </div>
 
-    <script>
+        <script>
         const firebaseConfig = {
             apiKey: "AIzaSyBmVtAF5wQrcrzlfjpTAZoLDFbyrpr9FmY",
             authDomain: "secret-d7e10.firebaseapp.com",
@@ -133,7 +154,6 @@
             return nameColors[name];
         }
 
-        // Clean room name to make it safe for Firebase paths (removes special chars/spaces)
         function sanitizeRoomName(room) {
             return room.replace(/[.#$\/\[\]]/g, "_").toLowerCase();
         }
@@ -164,6 +184,16 @@
             db.ref(`rooms/${currentRoom}/presence/${currentUser}`).set({
                 online: isOnline,
                 lastSeen: Date.now()
+            });
+
+            db.ref(`rooms/${currentRoom}/messages`).once('value', (snapshot) => {
+                snapshot.forEach((childSnap) => {
+                    const msg = childSnap.val();
+                    if (msg.sender !== currentUser) {
+                        db.ref(`rooms/${currentRoom}/messages/${childSnap.key}/deliveredTo/${currentUser}`).set(true);
+                        db.ref(`rooms/${currentRoom}/messages/${childSnap.key}/readBy/${currentUser}`).set(true);
+                    }
+                });
             });
         }
 
@@ -211,7 +241,7 @@
                 if (typingUsers.length > 0) {
                     statusEl.innerText = typingUsers.join(', ') + " is typing...";
                 } else {
-                    statusEl.innerText = "🟢 Online";
+                    statusEl.innerText = "🟢 Active in group";
                 }
             });
         }
@@ -229,13 +259,24 @@
                 text: text,
                 type: 'text',
                 time: timeString,
-                status: 'delivered',
+                deliveredTo: { [currentUser]: true },
+                readBy: { [currentUser]: true },
                 timestamp: Date.now()
             };
 
-            db.ref(`rooms/${currentRoom}/messages`).push(messageData).catch((error) => {
-                alert("Failed to send message: " + error.message);
+            const newMsgRef = db.ref(`rooms/${currentRoom}/messages`).push();
+            newMsgRef.set(messageData);
+
+            db.ref(`rooms/${currentRoom}/presence`).once('value', (snap) => {
+                snap.forEach((userSnap) => {
+                    const member = userSnap.key;
+                    if (member !== currentUser) {
+                        db.ref(`rooms/${currentRoom}/messages/${newMsgRef.key}/deliveredTo/${member}`).set(true);
+                        db.ref(`rooms/${currentRoom}/messages/${newMsgRef.key}/readBy/${member}`).set(true);
+                    }
+                });
             });
+
             input.value = "";
         }
 
@@ -261,11 +302,24 @@
                     fileType: file.type,
                     type: file.type.startsWith('image/') ? 'image' : 'file',
                     time: timeString,
-                    status: 'delivered',
+                    deliveredTo: { [currentUser]: true },
+                    readBy: { [currentUser]: true },
                     timestamp: Date.now()
                 };
 
-                db.ref(`rooms/${currentRoom}/messages`).push(messageData);
+                const newMsgRef = db.ref(`rooms/${currentRoom}/messages`).push();
+                newMsgRef.set(messageData);
+
+                db.ref(`rooms/${currentRoom}/presence`).once('value', (snap) => {
+                    snap.forEach((userSnap) => {
+                        const member = userSnap.key;
+                        if (member !== currentUser) {
+                            db.ref(`rooms/${currentRoom}/messages/${newMsgRef.key}/deliveredTo/${member}`).set(true);
+                            db.ref(`rooms/${currentRoom}/messages/${newMsgRef.key}/readBy/${member}`).set(true);
+                        }
+                    });
+                });
+
                 event.target.value = "";
             };
             reader.readAsDataURL(file);
@@ -275,10 +329,7 @@
             const container = document.getElementById('messages-container');
             container.innerHTML = "";
 
-            // Use 'limitToLast(50)' to load recent messages smoothly
-            const messagesRef = db.ref(`rooms/${currentRoom}/messages`).limitToLast(50);
-
-            messagesRef.on('child_added', (snapshot) => {
+            db.ref(`rooms/${currentRoom}/messages`).limitToLast(50).on('child_added', (snapshot) => {
                 renderSingleMessage(snapshot.key, snapshot.val());
             });
 
@@ -288,11 +339,6 @@
                     const msg = snapshot.val();
                     if (msg.deletedForEveryone) {
                         existingEl.innerHTML = `<p class="italic text-[#8696a0] text-xs">🔒 This message was deleted</p>`;
-                    } else if (msg.status) {
-                        const tickEl = existingEl.querySelector('.tick-mark');
-                        if (tickEl) {
-                            tickEl.innerHTML = msg.status === 'read' ? '<span class="text-[#34b7f1]">✓✓</span>' : '<span>✓✓</span>';
-                        }
                     }
                 }
             });
@@ -338,20 +384,22 @@
                 contentHTML = `<p class="break-words pb-1 text-sm md:text-base leading-relaxed">${escapeHTML(msg.text || '')}</p>`;
             }
 
+            const infoClickHandler = isMe && !msg.deletedForEveryone ? `onclick="openMessageInfo('${key}')"` : '';
+            const cursorClass = isMe && !msg.deletedForEveryone ? 'cursor-pointer' : '';
+
             let ticks = '';
             if (isMe && !msg.deletedForEveryone) {
-                const tickColor = msg.status === 'read' ? 'text-[#34b7f1]' : 'text-[#8696a0]';
-                ticks = `<span class="tick-mark ml-1 ${tickColor} font-bold">✓✓</span>`;
+                ticks = `<span class="ml-1 text-[#34b7f1] font-bold">✓✓</span>`;
             }
 
             const deleteTrigger = !msg.deletedForEveryone ? `
-                <button onclick="openDeleteModal('${key}')" class="delete-btn opacity-0 transition absolute top-1 ${isMe ? '-left-7' : '-right-7'} bg-[#202c33] hover:bg-[#2a3942] text-[#8696a0] hover:text-white p-1 rounded-full text-xs shadow">
+                <button onclick="event.stopPropagation(); openDeleteModal('${key}')" class="msg-actions opacity-0 transition absolute top-1 ${isMe ? '-left-7' : '-right-7'} bg-[#202c33] hover:bg-[#2a3942] text-[#8696a0] hover:text-white p-1 rounded-full text-xs shadow">
                     🗑️
                 </button>
             ` : '';
 
             messageDiv.innerHTML = `
-                <div class="relative max-w-[75%] md:max-w-[65%] rounded-2xl px-4 py-2 shadow-lg ${isMe ? 'bg-[#005c4b] text-white rounded-tr-none' : 'bg-[#202c33] text-white rounded-tl-none'}">
+                <div ${infoClickHandler} class="relative max-w-[75%] md:max-w-[65%] rounded-2xl px-4 py-2 shadow-lg ${isMe ? 'bg-[#005c4b]' : 'bg-[#202c33]'} text-white ${isMe ? 'rounded-tr-none' : 'rounded-tl-none'} ${cursorClass}" title="Click for message info">
                     ${deleteTrigger}
                     ${!isMe ? `<p class="text-xs font-bold mb-1" style="color: ${userColor};">${msg.sender}</p>` : ''}
                     ${contentHTML}
@@ -366,8 +414,44 @@
             container.scrollTop = container.scrollHeight;
         }
 
+        function openMessageInfo(msgKey) {
+            db.ref(`rooms/${currentRoom}/messages/${msgKey}`).once('value', (snapshot) => {
+                const msg = snapshot.val();
+                if (!msg) return;
+
+                const readByList = document.getElementById('read-by-list');
+                const deliveredToList = document.getElementById('delivered-to-list');
+
+                readByList.innerHTML = '';
+                deliveredToList.innerHTML = '';
+
+                const readBy = msg.readBy || {};
+                const deliveredTo = msg.deliveredTo || {};
+
+                for (let user in readBy) {
+                    readByList.innerHTML += `<div class="flex items-center justify-between bg-[#111b21] px-3 py-1.5 rounded-lg border border-[#2a3942]"><span>${user}</span> <span class="text-xs text-[#00a884]">Read ✓✓</span></div>`;
+                }
+
+                for (let user in deliveredTo) {
+                    if (!readBy[user]) {
+                        deliveredToList.innerHTML += `<div class="flex items-center justify-between bg-[#111b21] px-3 py-1.5 rounded-lg border border-[#2a3942]"><span>${user}</span> <span class="text-xs text-[#8696a0]">Delivered ✓</span></div>`;
+                    }
+                }
+
+                if (readByList.innerHTML === '') readByList.innerHTML = '<p class="text-xs text-[#8696a0]">No one yet</p>';
+                if (deliveredToList.innerHTML === '') deliveredToList.innerHTML = '<p class="text-xs text-[#8696a0]">All read</p>';
+
+                document.getElementById('info-modal').classList.remove('hidden');
+            });
+        }
+
+        function closeInfoModal() {
+            document.getElementById('info-modal').classList.add('hidden');
+        }
+
         function openDeleteModal(msgKey) {
             selectedMessageKey = msgKey;
+            document.getElementById('delete-modal').classList.add('hidden');
             document.getElementById('delete-modal').classList.remove('hidden');
         }
 
@@ -404,3 +488,5 @@
     </script>
 </body>
 </html>
+
+    
