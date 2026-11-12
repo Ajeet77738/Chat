@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Advanced Secret WhatsApp</title>
+    <title>Ultimate Secret WhatsApp</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Firebase SDK -->
@@ -52,13 +52,13 @@
                 <input type="text" id="name-input" placeholder="e.g. Alex" class="w-full bg-[#2a3942]/50 border border-[#374248] rounded-xl p-3 text-white focus:outline-none focus:border-[#00a884] focus:ring-1 focus:ring-[#00a884] transition">
             </div>
             <button onclick="joinRoom()" class="w-full bg-gradient-to-r from-[#00a884] to-[#25d366] text-black font-bold py-3 rounded-xl hover:opacity-90 shadow-[0_4px_20px_rgba(0,168,132,0.4)] transition cursor-pointer active:scale-95">
-                Join Group 🚀
+                Join Secure Room 🚀
             </button>
         </div>
     </div>
 
     <!-- CHAT SCREEN -->
-    <div id="chat-screen" class="hidden w-full max-w-4xl h-full md:h-[92vh] bg-[#111b21] md:rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-[#222d34] shadow-[0_0_40px_rgba(0,0,0,0.8)] transition-colors duration-300" id="chat-container-box">
+    <div id="chat-screen" class="hidden w-full max-w-4xl h-full md:h-[92vh] bg-[#111b21] md:rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-[#222d34] shadow-[0_0_40px_rgba(0,0,0,0.8)] transition-colors duration-300">
         <!-- Chat Header -->
         <div id="chat-header" class="bg-[#202c33] px-5 py-3 flex items-center justify-between border-b border-[#2a3942] transition-colors duration-300">
             <div class="flex items-center gap-3">
@@ -69,9 +69,12 @@
                 </div>
             </div>
             <div class="flex items-center gap-2">
-                <!-- Theme Toggle Button -->
-                <button onclick="toggleTheme()" id="theme-btn" class="text-xs bg-[#2a3942] hover:bg-[#374248] text-[#8696a0] hover:text-white px-3 py-1.5 rounded-lg transition font-semibold cursor-pointer border border-[#374248]" title="Toggle Light/Dark Mode">☀️ Light</button>
-                <button onclick="leaveRoom()" class="text-xs bg-[#2a3942] hover:bg-[#374248] text-[#8696a0] hover:text-white px-3 py-1.5 rounded-lg transition font-semibold cursor-pointer border border-[#374248]">Leave Room</button>
+                <!-- Call Buttons -->
+                <button onclick="startCall('audio')" class="bg-[#2a3942] hover:bg-[#374248] text-white p-2 rounded-lg transition text-sm cursor-pointer" title="Voice Call">📞</button>
+                <button onclick="startCall('video')" class="bg-[#2a3942] hover:bg-[#374248] text-white p-2 rounded-lg transition text-sm cursor-pointer" title="Video Call">📹</button>
+                <!-- Theme Toggle -->
+                <button onclick="toggleTheme()" id="theme-btn" class="text-xs bg-[#2a3942] hover:bg-[#374248] text-[#8696a0] hover:text-white px-2.5 py-2 rounded-lg transition font-semibold cursor-pointer border border-[#374248]" title="Toggle Mode">☀️</button>
+                <button onclick="leaveRoom()" class="text-xs bg-[#2a3942] hover:bg-[#374248] text-[#8696a0] hover:text-white px-3 py-2 rounded-lg transition font-semibold cursor-pointer border border-[#374248]">Leave</button>
             </div>
         </div>
 
@@ -90,6 +93,31 @@
             <button onclick="sendMessage()" class="text-[#8696a0] hover:text-[#00a884] p-2 rounded-full transition cursor-pointer text-xl flex items-center justify-center" title="Send Message">
                 <svg viewBox="0 0 24 24" height="24" width="24" preserveAspectRatio="xMidYMid meet" version="1.1" x="0px" y="0px"><path fill="currentColor" d="M1.101,21.757L23.8,12.028L1.101,2.3l0.011,7.912l13.613,1.816L1.112,13.845 L1.101,21.757z"></path></svg>
             </button>
+        </div>
+    </div>
+
+    <!-- CALL UI MODAL -->
+    <div id="call-modal" class="hidden fixed inset-0 bg-black/90 z-50 flex flex-col items-center justify-center p-4">
+        <div class="relative w-full max-w-2xl bg-[#111b21] rounded-2xl overflow-hidden border border-[#2a3942] shadow-2xl flex flex-col items-center p-6 space-y-4">
+            <h3 id="call-status-text" class="text-white font-bold text-lg animate-pulse">Connecting Call...</h3>
+            <div class="flex gap-4 w-full justify-center">
+                <video id="local-video" autoplay playsinline muted class="w-48 h-36 bg-black rounded-xl object-cover border border-[#2a3942]"></video>
+                <video id="remote-video" autoplay playsinline class="w-48 h-36 bg-black rounded-xl object-cover border border-[#2a3942]"></video>
+                <audio id="remote-audio" autoplay></audio>
+            </div>
+            <button onclick="endCall()" class="bg-red-600 hover:bg-red-700 text-white font-bold px-6 py-2.5 rounded-xl transition cursor-pointer">End Call 📴</button>
+        </div>
+    </div>
+
+    <!-- INCOMING CALL RINGING MODAL -->
+    <div id="incoming-call-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-[#202c33] border border-[#2a3942] p-6 rounded-2xl w-80 shadow-2xl text-center space-y-4">
+            <div class="text-4xl animate-bounce">📞</div>
+            <h3 id="incoming-caller-text" class="font-bold text-white text-base">Incoming Call...</h3>
+            <div class="flex gap-3">
+                <button onclick="acceptCall()" class="flex-1 bg-[#00a884] hover:bg-[#008f72] text-black font-bold py-2.5 rounded-xl transition">Accept ✅</button>
+                <button onclick="rejectCall()" class="flex-1 bg-red-600/20 hover:bg-red-600/30 text-red-400 border border-red-500/30 py-2.5 rounded-xl font-medium transition">Decline ❌</button>
+            </div>
         </div>
     </div>
 
@@ -125,6 +153,7 @@
             </div>
         </div>
     </div>
+
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyBmVtAF5wQrcrzlfjpTAZoLDFbyrpr9FmY",
@@ -145,6 +174,14 @@
         let selectedMessageKey = null;
         let isDarkMode = true;
 
+        // WebRTC Variables
+        let peerConnection;
+        let localStream;
+        let incomingCallData = null;
+        const servers = {
+            iceServers: [{ urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] }]
+        };
+
         const nameColors = {};
         const colorPalette = ['#00a884', '#34b7f1', '#ffbc42', '#ff5722', '#ab47bc', '#26a69a', '#ec407a'];
         function getColorForUser(name) {
@@ -160,21 +197,21 @@
             return room.replace(/[.#$\/\[\]]/g, "_").toLowerCase();
         }
 
-        // Check Local Storage on page load for active session & theme preference
         window.addEventListener('DOMContentLoaded', () => {
             const savedRoom = localStorage.getItem('secret_chat_room');
             const savedUser = localStorage.getItem('secret_chat_user');
             const savedTheme = localStorage.getItem('secret_chat_theme');
 
-            if (savedTheme === 'light') {
-                toggleTheme(true);
-            }
-
+            if (savedTheme === 'light') toggleTheme(true);
             if (savedRoom && savedUser) {
                 document.getElementById('room-input').value = savedRoom;
                 document.getElementById('name-input').value = savedUser;
-                // Auto login if session exists
                 joinRoom(true);
+            }
+
+            // Request Browser Notification Permission
+            if (Notification && Notification.permission !== "granted") {
+                Notification.requestPermission();
             }
         });
 
@@ -193,7 +230,7 @@
                 chatHeader.className = "bg-[#202c33] px-5 py-3 flex items-center justify-between border-b border-[#2a3942] transition-colors duration-300";
                 chatFooter.className = "bg-[#202c33] px-4 py-2.5 flex items-center gap-2 border-t border-[#2a3942] transition-colors duration-300";
                 msgContainer.className = "flex-1 p-5 overflow-y-auto space-y-4 bg-[#0b141a] transition-colors duration-300";
-                themeBtn.innerText = "☀️ Light";
+                themeBtn.innerText = "☀️";
                 localStorage.setItem('secret_chat_theme', 'dark');
             } else {
                 body.className = "bg-gradient-to-br from-[#f0f2f5] via-[#efeae2] to-[#d9dad7] text-[#111b21] h-screen flex flex-col justify-center items-center m-0 font-sans p-0 md:p-4 transition-colors duration-300";
@@ -201,7 +238,7 @@
                 chatHeader.className = "bg-[#f0f2f5] px-5 py-3 flex items-center justify-between border-b border-gray-300 transition-colors duration-300";
                 chatFooter.className = "bg-[#f0f2f5] px-4 py-2.5 flex items-center gap-2 border-t border-gray-300 transition-colors duration-300";
                 msgContainer.className = "flex-1 p-5 overflow-y-auto space-y-4 bg-[#efeae2] transition-colors duration-300";
-                themeBtn.innerText = "🌙 Dark";
+                themeBtn.innerText = "🌙";
                 localStorage.setItem('secret_chat_theme', 'light');
             }
         }
@@ -218,7 +255,6 @@
             currentRoom = sanitizeRoomName(rawRoom);
             currentUser = name;
 
-            // Save to Local Storage so user doesn't need to login again
             localStorage.setItem('secret_chat_room', rawRoom);
             localStorage.setItem('secret_chat_user', name);
 
@@ -228,6 +264,7 @@
 
             loadMessages();
             listenForTyping();
+            listenForCalls();
             updatePresence(true);
         }
 
@@ -236,16 +273,6 @@
             db.ref(`rooms/${currentRoom}/presence/${currentUser}`).set({
                 online: isOnline,
                 lastSeen: Date.now()
-            });
-
-            db.ref(`rooms/${currentRoom}/messages`).once('value', (snapshot) => {
-                snapshot.forEach((childSnap) => {
-                    const msg = childSnap.val();
-                    if (msg.sender !== currentUser) {
-                        db.ref(`rooms/${currentRoom}/messages/${childSnap.key}/deliveredTo/${currentUser}`).set(true);
-                        db.ref(`rooms/${currentRoom}/messages/${childSnap.key}/readBy/${currentUser}`).set(true);
-                    }
-                });
             });
         }
 
@@ -258,40 +285,30 @@
 
         function leaveRoom() {
             updatePresence(false);
-            // Clear session storage on manual leave
             localStorage.removeItem('secret_chat_room');
             localStorage.removeItem('secret_chat_user');
             location.reload();
         }
 
         function handleKeyPress(e) {
-            if (e.key === 'Enter') {
-                sendMessage();
-            }
+            if (e.key === 'Enter') sendMessage();
         }
 
         function updateTypingStatus() {
             if (!currentRoom || !currentUser) return;
             const typingRef = db.ref(`rooms/${currentRoom}/typing/${currentUser}`);
             typingRef.set(true);
-
             clearTimeout(typingTimeout);
-            typingTimeout = setTimeout(() => {
-                typingRef.set(false);
-            }, 2000);
+            typingTimeout = setTimeout(() => typingRef.set(false), 2000);
         }
 
         function listenForTyping() {
             db.ref(`rooms/${currentRoom}/typing`).on('value', (snapshot) => {
                 const typingData = snapshot.val() || {};
                 let typingUsers = [];
-
                 for (let user in typingData) {
-                    if (user !== currentUser && typingData[user] === true) {
-                        typingUsers.push(user);
-                    }
+                    if (user !== currentUser && typingData[user] === true) typingUsers.push(user);
                 }
-
                 const statusEl = document.getElementById('typing-status');
                 if (typingUsers.length > 0) {
                     statusEl.innerText = typingUsers.join(', ') + " is typing...";
@@ -319,62 +336,33 @@
                 timestamp: Date.now()
             };
 
-            const newMsgRef = db.ref(`rooms/${currentRoom}/messages`).push();
-            newMsgRef.set(messageData);
-
-            db.ref(`rooms/${currentRoom}/presence`).once('value', (snap) => {
-                snap.forEach((userSnap) => {
-                    const member = userSnap.key;
-                    if (member !== currentUser) {
-                        db.ref(`rooms/${currentRoom}/messages/${newMsgRef.key}/deliveredTo/${member}`).set(true);
-                        db.ref(`rooms/${currentRoom}/messages/${newMsgRef.key}/readBy/${member}`).set(true);
-                    }
-                });
-            });
-
+            db.ref(`rooms/${currentRoom}/messages`).push(messageData);
             input.value = "";
         }
 
         function handleFileSelect(event) {
             const file = event.target.files[0];
             if (!file) return;
-
             if (file.size > 1500000) {
-                alert("File size is too large! Please choose a file under 1.5MB.");
+                alert("File size under 1.5MB allowed!");
                 event.target.value = "";
                 return;
             }
 
             const reader = new FileReader();
             reader.onload = function(e) {
-                const base64Data = e.target.result;
-                const timeString = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
                 const messageData = {
                     sender: currentUser,
                     fileName: file.name,
-                    fileData: base64Data,
+                    fileData: e.target.result,
                     fileType: file.type,
                     type: file.type.startsWith('image/') ? 'image' : 'file',
-                    time: timeString,
+                    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
                     deliveredTo: { [currentUser]: true },
                     readBy: { [currentUser]: true },
                     timestamp: Date.now()
                 };
-
-                const newMsgRef = db.ref(`rooms/${currentRoom}/messages`).push();
-                newMsgRef.set(messageData);
-
-                db.ref(`rooms/${currentRoom}/presence`).once('value', (snap) => {
-                    snap.forEach((userSnap) => {
-                        const member = userSnap.key;
-                        if (member !== currentUser) {
-                            db.ref(`rooms/${currentRoom}/messages/${newMsgRef.key}/deliveredTo/${member}`).set(true);
-                            db.ref(`rooms/${currentRoom}/messages/${newMsgRef.key}/readBy/${member}`).set(true);
-                        }
-                    });
-                });
-
+                db.ref(`rooms/${currentRoom}/messages`).push(messageData);
                 event.target.value = "";
             };
             reader.readAsDataURL(file);
@@ -385,16 +373,22 @@
             container.innerHTML = "";
 
             db.ref(`rooms/${currentRoom}/messages`).limitToLast(50).on('child_added', (snapshot) => {
-                renderSingleMessage(snapshot.key, snapshot.val());
+                const msg = snapshot.val();
+                renderSingleMessage(snapshot.key, msg);
+
+                // Trigger Desktop Push Notification if background tab
+                if (msg.sender !== currentUser && document.hidden && Notification.permission === "granted") {
+                    new Notification(`New message from ${msg.sender}`, {
+                        body: msg.text || "Sent an attachment",
+                        icon: "https://cdn-icons-png.flaticon.com/512/733/733585.png"
+                    });
+                }
             });
 
             db.ref(`rooms/${currentRoom}/messages`).on('child_changed', (snapshot) => {
                 const existingEl = document.getElementById(`msg-${snapshot.key}`);
-                if (existingEl) {
-                    const msg = snapshot.val();
-                    if (msg.deletedForEveryone) {
-                        existingEl.innerHTML = `<p class="italic text-[#8696a0] text-xs">🔒 This message was deleted</p>`;
-                    }
+                if (existingEl && snapshot.val().deletedForEveryone) {
+                    existingEl.innerHTML = `<p class="italic text-[#8696a0] text-xs">🔒 This message was deleted</p>`;
                 }
             });
 
@@ -431,7 +425,7 @@
                         <span class="text-2xl">📄</span>
                         <div class="overflow-hidden">
                             <p class="text-xs font-bold truncate max-w-[170px] text-white">${escapeHTML(msg.fileName || 'Document')}</p>
-                            <a href="${msg.fileData}" download="${msg.fileName || 'file'}" class="text-[11px] text-[#00a884] font-semibold hover:underline">Download File 📥</a>
+                            <a href="${msg.fileData}" download="${msg.fileName || 'file'}" class="text-[11px] text-[#00a884] font-semibold hover:underline">Download 📥</a>
                         </div>
                     </div>
                 `;
@@ -439,23 +433,12 @@
                 contentHTML = `<p class="break-words pb-1 text-sm md:text-base leading-relaxed">${escapeHTML(msg.text || '')}</p>`;
             }
 
-            let ticks = '';
-            if (isMe && !msg.deletedForEveryone) {
-                ticks = `<span class="ml-1 text-[#34b7f1] font-bold">✓✓</span>`;
-            }
-
             let actionButtons = '';
             if (!msg.deletedForEveryone) {
-                const infoBtn = isMe ? `<button onclick="openMessageInfo('${key}')" class="bg-[#202c33] hover:bg-[#2a3942] text-[#8696a0] hover:text-[#00a884] px-1.5 py-0.5 rounded text-xs shadow border border-[#2a3942]" title="Message Info">ℹ️</button>` : '';
-                const deleteBtn = isMe ? `<button onclick="openDeleteModal('${key}')" class="bg-[#202c33] hover:bg-[#2a3942] text-[#8696a0] hover:text-red-400 px-1.5 py-0.5 rounded text-xs shadow border border-[#2a3942]" title="Delete Message">🗑️</button>` : '';
-                
+                const infoBtn = isMe ? `<button onclick="openMessageInfo('${key}')" class="bg-[#202c33] hover:bg-[#2a3942] text-[#8696a0] hover:text-[#00a884] px-1.5 py-0.5 rounded text-xs shadow border border-[#2a3942]" title="Info">ℹ️</button>` : '';
+                const deleteBtn = isMe ? `<button onclick="openDeleteModal('${key}')" class="bg-[#202c33] hover:bg-[#2a3942] text-[#8696a0] hover:text-red-400 px-1.5 py-0.5 rounded text-xs shadow border border-[#2a3942]" title="Delete">🗑️</button>` : '';
                 if (infoBtn || deleteBtn) {
-                    actionButtons = `
-                        <div class="msg-actions opacity-0 transition absolute -top-3 ${isMe ? 'left-2' : 'right-2'} flex items-center gap-1 z-10">
-                            ${infoBtn}
-                            ${deleteBtn}
-                        </div>
-                    `;
+                    actionButtons = `<div class="msg-actions opacity-0 transition absolute -top-3 ${isMe ? 'left-2' : 'right-2'} flex items-center gap-1 z-10">${infoBtn}${deleteBtn}</div>`;
                 }
             }
 
@@ -468,7 +451,7 @@
                     ${contentHTML}
                     <div class="text-[10px] text-[#8696a0] text-right mt-1 font-medium flex items-center justify-end gap-1">
                         <span>${msg.time || ''}</span>
-                        ${ticks}
+                        ${isMe ? '<span class="text-[#34b7f1] font-bold">✓✓</span>' : ''}
                     </div>
                 </div>
             `;
@@ -477,79 +460,139 @@
             container.scrollTop = container.scrollHeight;
         }
 
+        // ================= WEB RTC CALL LOGIC =================
+        async function startCall(type) {
+            document.getElementById('call-modal').classList.remove('hidden');
+            document.getElementById('call-status-text').innerText = "Calling...";
+
+            localStream = await navigator.mediaDevices.getUserMedia({ video: type === 'video', audio: true });
+            document.getElementById('local-video').srcObject = localStream;
+
+            peerConnection = new RTCPeerConnection(servers);
+            localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+
+            peerConnection.ontrack = event => {
+                document.getElementById('remote-video').srcObject = event.streams[0];
+            };
+
+            peerConnection.onicecandidate = event => {
+                if (event.candidate) {
+                    db.ref(`rooms/${currentRoom}/call/candidates`).push(event.candidate.toJSON());
+                }
+            };
+
+            const offer = await peerConnection.createOffer();
+            await peerConnection.setLocalDescription(offer);
+
+            db.ref(`rooms/${currentRoom}/call`).set({
+                type: type,
+                caller: currentUser,
+                offer: { type: offer.type, sdp: offer.sdp }
+            });
+        }
+
+        function listenForCalls() {
+            db.ref(`rooms/${currentRoom}/call`).on('value', async snapshot => {
+                const data = snapshot.val();
+                if (!data) return;
+
+                if (data.caller !== currentUser && !peerConnection) {
+                    incomingCallData = data;
+                    document.getElementById('incoming-caller-text').innerText = `${data.caller} is calling (${data.type})...`;
+                    document.getElementById('incoming-call-modal').classList.remove('hidden');
+                }
+            });
+
+            db.ref(`rooms/${currentRoom}/call/answer`).on('value', async snapshot => {
+                const answer = snapshot.val();
+                if (answer && peerConnection && !peerConnection.currentRemoteDescription) {
+                    await peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
+                    document.getElementById('call-status-text').innerText = "Connected!";
+                }
+            });
+
+            db.ref(`rooms/${currentRoom}/call/candidates`).on('child_added', async snapshot => {
+                const candidate = snapshot.val();
+                if (peerConnection && candidate) {
+                    try { await peerConnection.addIceCandidate(new RTCIceCandidate(candidate)); } catch(e){}
+                }
+            });
+        }
+
+        async function acceptCall() {
+            document.getElementById('incoming-call-modal').classList.add('hidden');
+            document.getElementById('call-modal').classList.remove('hidden');
+            document.getElementById('call-status-text').innerText = "Connecting Call...";
+
+            localStream = await navigator.mediaDevices.getUserMedia({ video: incomingCallData.type === 'video', audio: true });
+            document.getElementById('local-video').srcObject = localStream;
+
+            peerConnection = new RTCPeerConnection(servers);
+            localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+
+            peerConnection.ontrack = event => {
+                document.getElementById('remote-video').srcObject = event.streams[0];
+            };
+
+            peerConnection.onicecandidate = event => {
+                if (event.candidate) {
+                    db.ref(`rooms/${currentRoom}/call/candidates`).push(event.candidate.toJSON());
+                }
+            };
+
+            await peerConnection.setRemoteDescription(new RTCSessionDescription(incomingCallData.offer));
+            const answer = await peerConnection.createAnswer();
+            await peerConnection.setLocalDescription(answer);
+
+            db.ref(`rooms/${currentRoom}/call/answer`).set({ type: answer.type, sdp: answer.sdp });
+            document.getElementById('call-status-text').innerText = "Connected!";
+        }
+
+        function rejectCall() {
+            document.getElementById('incoming-call-modal').classList.add('hidden');
+            db.ref(`rooms/${currentRoom}/call`).remove();
+        }
+
+        function endCall() {
+            if (localStream) localStream.getTracks().forEach(t => t.stop());
+            if (peerConnection) peerConnection.close();
+            peerConnection = null;
+            document.getElementById('call-modal').classList.add('hidden');
+            db.ref(`rooms/${currentRoom}/call`).remove();
+        }
+// Modals & Helpers
         function openMessageInfo(msgKey) {
             db.ref(`rooms/${currentRoom}/messages/${msgKey}`).once('value', (snapshot) => {
                 const msg = snapshot.val();
                 if (!msg) return;
-
                 const readByList = document.getElementById('read-by-list');
                 const deliveredToList = document.getElementById('delivered-to-list');
-
-                readByList.innerHTML = '';
-                deliveredToList.innerHTML = '';
-
-                const readBy = msg.readBy || {};
-                const deliveredTo = msg.deliveredTo || {};
-
-                for (let user in readBy) {
-                    readByList.innerHTML += `<div class="flex items-center justify-between bg-[#111b21] px-3 py-1.5 rounded-lg border border-[#2a3942]"><span>${user}</span> <span class="text-xs text-[#00a884]">Read ✓✓</span></div>`;
-                }
-
+                readByList.innerHTML = ''; deliveredToList.innerHTML = '';
+                const readBy = msg.readBy || {}; const deliveredTo = msg.deliveredTo || {};
+                for (let user in readBy) readByList.innerHTML += `<div class="flex justify-between bg-[#111b21] px-3 py-1.5 rounded-lg"><span>${user}</span> <span class="text-xs text-[#00a884]">Read ✓✓</span></div>`;
                 for (let user in deliveredTo) {
-                    if (!readBy[user]) {
-                        deliveredToList.innerHTML += `<div class="flex items-center justify-between bg-[#111b21] px-3 py-1.5 rounded-lg border border-[#2a3942]"><span>${user}</span> <span class="text-xs text-[#8696a0]">Delivered ✓</span></div>`;
-                    }
+                    if (!readBy[user]) deliveredToList.innerHTML += `<div class="flex justify-between bg-[#111b21] px-3 py-1.5 rounded-lg"><span>${user}</span> <span class="text-xs text-[#8696a0]">Delivered ✓</span></div>`;
                 }
-
-                if (readByList.innerHTML === '') readByList.innerHTML = '<p class="text-xs text-[#8696a0]">No one yet</p>';
-                if (deliveredToList.innerHTML === '') deliveredToList.innerHTML = '<p class="text-xs text-[#8696a0]">All read</p>';
-
                 document.getElementById('info-modal').classList.remove('hidden');
             });
         }
-
-        function closeInfoModal() {
-            document.getElementById('info-modal').classList.add('hidden');
-        }
-
-        function openDeleteModal(msgKey) {
-            selectedMessageKey = msgKey;
-            document.getElementById('delete-modal').classList.add('hidden');
-            document.getElementById('delete-modal').classList.remove('hidden');
-        }
-
-        function closeDeleteModal() {
-            selectedMessageKey = null;
-            document.getElementById('delete-modal').classList.add('hidden');
-        }
-
+        function closeInfoModal() { document.getElementById('info-modal').classList.add('hidden'); }
+        function openDeleteModal(msgKey) { selectedMessageKey = msgKey; document.getElementById('delete-modal').classList.remove('hidden'); }
+        function closeDeleteModal() { selectedMessageKey = null; document.getElementById('delete-modal').classList.add('hidden'); }
         function confirmDelete(type) {
             if (!selectedMessageKey) return;
-
             if (type === 'me') {
                 db.ref(`rooms/${currentRoom}/messages/${selectedMessageKey}/deletedForMe/${currentUser}`).set(true);
-                const el = document.getElementById(`msg-${selectedMessageKey}`);
-                if (el) el.remove();
+                document.getElementById(`msg-${selectedMessageKey}`)?.remove();
             } else if (type === 'everyone') {
-                db.ref(`rooms/${currentRoom}/messages/${selectedMessageKey}`).update({
-                    deletedForEveryone: true,
-                    text: "",
-                    fileData: "",
-                    fileName: ""
-                });
+                db.ref(`rooms/${currentRoom}/messages/${selectedMessageKey}`).update({ deletedForEveryone: true, text: "", fileData: "", fileName: "" });
             }
-
             closeDeleteModal();
         }
-
         function escapeHTML(str) {
             if (!str) return '';
-            return str.replace(/[&<>'"]/g, 
-                tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
-            );
+            return str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag));
         }
     </script>
 </body>
 </html>
-
-    
