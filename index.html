@@ -19,6 +19,7 @@
         }
         .msg-container:hover .msg-actions {
             opacity: 1;
+            pointer-events: auto;
         }
         ::-webkit-scrollbar {
             width: 6px;
@@ -74,7 +75,7 @@
         </div>
 
         <!-- Messages Box -->
-        <div id="messages-container" class="flex-1 p-5 overflow-y-auto space-y-3 bg-[#0b141a] bg-[radial-gradient(#111b21_1px,transparent_1px)] [background-size:16px_16px]">
+        <div id="messages-container" class="flex-1 p-5 overflow-y-auto space-y-4 bg-[#0b141a] bg-[radial-gradient(#111b21_1px,transparent_1px)] [background-size:16px_16px]">
             <!-- Dynamic messages load here -->
         </div>
 
@@ -123,7 +124,6 @@
             </div>
         </div>
     </div>
-
         <script>
         const firebaseConfig = {
             apiKey: "AIzaSyBmVtAF5wQrcrzlfjpTAZoLDFbyrpr9FmY",
@@ -358,7 +358,7 @@
 
             const messageDiv = document.createElement('div');
             messageDiv.id = `msg-${key}`;
-            messageDiv.className = `flex ${isMe ? 'justify-end' : 'justify-start'} message-anim relative msg-container`;
+            messageDiv.className = `flex ${isMe ? 'justify-end' : 'justify-start'} message-anim relative msg-container my-1`;
 
             let contentHTML = '';
             if (msg.deletedForEveryone) {
@@ -384,23 +384,27 @@
                 contentHTML = `<p class="break-words pb-1 text-sm md:text-base leading-relaxed">${escapeHTML(msg.text || '')}</p>`;
             }
 
-            const infoClickHandler = isMe && !msg.deletedForEveryone ? `onclick="openMessageInfo('${key}')"` : '';
-            const cursorClass = isMe && !msg.deletedForEveryone ? 'cursor-pointer' : '';
-
             let ticks = '';
             if (isMe && !msg.deletedForEveryone) {
                 ticks = `<span class="ml-1 text-[#34b7f1] font-bold">✓✓</span>`;
             }
 
-            const deleteTrigger = !msg.deletedForEveryone ? `
-                <button onclick="event.stopPropagation(); openDeleteModal('${key}')" class="msg-actions opacity-0 transition absolute top-1 ${isMe ? '-left-7' : '-right-7'} bg-[#202c33] hover:bg-[#2a3942] text-[#8696a0] hover:text-white p-1 rounded-full text-xs shadow">
-                    🗑️
-                </button>
-            ` : '';
+            let actionButtons = '';
+            if (!msg.deletedForEveryone) {
+                const infoBtn = isMe ? `<button onclick="openMessageInfo('${key}')" class="bg-[#202c33] hover:bg-[#2a3942] text-[#8696a0] hover:text-[#00a884] px-1.5 py-0.5 rounded text-xs shadow border border-[#2a3942]" title="Message Info">ℹ️</button>` : '';
+                const deleteBtn = `<button onclick="openDeleteModal('${key}')" class="bg-[#202c33] hover:bg-[#2a3942] text-[#8696a0] hover:text-red-400 px-1.5 py-0.5 rounded text-xs shadow border border-[#2a3942]" title="Delete Message">🗑️</button>`;
+                
+                actionButtons = `
+                    <div class="msg-actions opacity-0 transition absolute -top-3 ${isMe ? 'left-2' : 'right-2'} flex items-center gap-1 z-10">
+                        ${infoBtn}
+                        ${deleteBtn}
+                    </div>
+                `;
+            }
 
             messageDiv.innerHTML = `
-                <div ${infoClickHandler} class="relative max-w-[75%] md:max-w-[65%] rounded-2xl px-4 py-2 shadow-lg ${isMe ? 'bg-[#005c4b]' : 'bg-[#202c33]'} text-white ${isMe ? 'rounded-tr-none' : 'rounded-tl-none'} ${cursorClass}" title="Click for message info">
-                    ${deleteTrigger}
+                <div class="relative max-w-[75%] md:max-w-[65%] rounded-2xl px-4 py-2 shadow-lg ${isMe ? 'bg-[#005c4b]' : 'bg-[#202c33]'} text-white ${isMe ? 'rounded-tr-none' : 'rounded-tl-none'}">
+                    ${actionButtons}
                     ${!isMe ? `<p class="text-xs font-bold mb-1" style="color: ${userColor};">${msg.sender}</p>` : ''}
                     ${contentHTML}
                     <div class="text-[10px] text-[#8696a0] text-right mt-1 font-medium flex items-center justify-end gap-1">
@@ -488,5 +492,3 @@
     </script>
 </body>
 </html>
-
-    
