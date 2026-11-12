@@ -56,8 +56,7 @@
             </button>
         </div>
     </div>
-
-    <!-- CHAT SCREEN -->
+        <!-- CHAT SCREEN -->
     <div id="chat-screen" class="hidden w-full max-w-4xl h-full md:h-[92vh] bg-[#111b21] md:rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-[#222d34] shadow-[0_0_40px_rgba(0,0,0,0.8)] transition-colors duration-300">
         <!-- Chat Header -->
         <div id="chat-header" class="bg-[#202c33] px-5 py-3 flex items-center justify-between border-b border-[#2a3942] transition-colors duration-300">
@@ -69,10 +68,8 @@
                 </div>
             </div>
             <div class="flex items-center gap-2">
-                <!-- Call Buttons -->
                 <button onclick="startCall('audio')" class="bg-[#2a3942] hover:bg-[#374248] text-white p-2 rounded-lg transition text-sm cursor-pointer" title="Voice Call">📞</button>
                 <button onclick="startCall('video')" class="bg-[#2a3942] hover:bg-[#374248] text-white p-2 rounded-lg transition text-sm cursor-pointer" title="Video Call">📹</button>
-                <!-- Theme Toggle -->
                 <button onclick="toggleTheme()" id="theme-btn" class="text-xs bg-[#2a3942] hover:bg-[#374248] text-[#8696a0] hover:text-white px-2.5 py-2 rounded-lg transition font-semibold cursor-pointer border border-[#374248]" title="Toggle Mode">☀️</button>
                 <button onclick="leaveRoom()" class="text-xs bg-[#2a3942] hover:bg-[#374248] text-[#8696a0] hover:text-white px-3 py-2 rounded-lg transition font-semibold cursor-pointer border border-[#374248]">Leave</button>
             </div>
@@ -96,29 +93,28 @@
         </div>
     </div>
 
-    <!-- CALL UI MODAL WITH SWITCH CAMERA BUTTON -->
+    <!-- CALL UI MODAL WITH SWITCH CAMERA -->
     <div id="call-modal" class="hidden fixed inset-0 bg-black/95 z-50 flex flex-col items-center justify-center p-4">
-        <div class="relative w-full max-w-4xl bg-[#111b21] rounded-2xl overflow-hidden border border-[#2a3942] shadow-2xl flex flex-col items-center p-6 space-y-6">
-            <h3 id="call-status-text" class="text-white font-bold text-xl animate-pulse">Call Active</h3>
+        <div class="relative w-full max-w-4xl bg-[#111b21] rounded-2xl overflow-hidden border border-[#2a3942] shadow-2xl flex flex-col items-center p-4 md:p-6 space-y-4">
+            <h3 id="call-status-text" class="text-white font-bold text-lg animate-pulse">Call Active</h3>
             
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 w-full justify-items-center">
-                <div class="relative w-full max-w-md">
-                    <video id="remote-video" autoplay playsinline class="w-full h-64 md:h-80 bg-black rounded-2xl object-cover border border-[#2a3942] shadow-xl"></video>
-                    <span class="absolute bottom-3 left-3 bg-black/70 px-3 py-1 rounded-lg text-xs font-semibold text-white">Participant</span>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 w-full justify-items-center">
+                <div class="relative w-full max-w-sm">
+                    <video id="remote-video" autoplay playsinline class="w-full h-48 md:h-64 bg-black rounded-xl object-cover border border-[#2a3942] shadow-xl"></video>
+                    <span class="absolute bottom-2 left-2 bg-black/70 px-2 py-0.5 rounded text-[10px] text-white">Participant</span>
                 </div>
-                <div class="relative w-full max-w-md">
-                    <video id="local-video" autoplay playsinline muted class="w-full h-64 md:h-80 bg-black rounded-2xl object-cover border border-[#2a3942] shadow-xl"></video>
-                    <span class="absolute bottom-3 left-3 bg-black/70 px-3 py-1 rounded-lg text-xs font-semibold text-white">You</span>
+                <div class="relative w-full max-w-sm">
+                    <video id="local-video" autoplay playsinline muted class="w-full h-48 md:h-64 bg-black rounded-xl object-cover border border-[#2a3942] shadow-xl"></video>
+                    <span class="absolute bottom-2 left-2 bg-black/70 px-2 py-0.5 rounded text-[10px] text-white">You</span>
                 </div>
             </div>
             <audio id="remote-audio" autoplay></audio>
 
-            <!-- Call Action Buttons (Mute, Stop Cam, Switch Cam, End Call) -->
-            <div class="flex items-center gap-3 flex-wrap justify-center mt-2">
-                <button id="mute-btn" onclick="toggleMute()" class="bg-[#2a3942] hover:bg-[#374248] text-white px-4 py-2.5 rounded-xl transition text-sm cursor-pointer font-medium shadow">🎙️ Mute</button>
-                <button id="cam-btn" onclick="toggleCamera()" class="bg-[#2a3942] hover:bg-[#374248] text-white px-4 py-2.5 rounded-xl transition text-sm cursor-pointer font-medium shadow">📹 Stop Cam</button>
-                <button id="switch-cam-btn" onclick="switchCamera()" class="bg-[#2a3942] hover:bg-[#374248] text-white px-4 py-2.5 rounded-xl transition text-sm cursor-pointer font-medium shadow">🔄 Switch Cam</button>
-                <button onclick="endCall()" class="bg-red-600 hover:bg-red-700 text-white font-bold px-6 py-2.5 rounded-xl transition cursor-pointer shadow">End Call 📴</button>
+            <div class="flex items-center gap-2 md:gap-3 flex-wrap justify-center mt-2">
+                <button id="mute-btn" onclick="toggleMute()" class="bg-[#2a3942] hover:bg-[#374248] text-white px-3.5 py-2.5 rounded-xl transition text-xs md:text-sm cursor-pointer font-medium shadow">🎙️ Mute</button>
+                <button id="cam-btn" onclick="toggleCamera()" class="bg-[#2a3942] hover:bg-[#374248] text-white px-3.5 py-2.5 rounded-xl transition text-xs md:text-sm cursor-pointer font-medium shadow">📹 Stop Cam</button>
+                <button id="switch-cam-btn" onclick="switchCamera()" class="bg-[#00a884] hover:bg-[#008f72] text-black px-4 py-2.5 rounded-xl transition text-xs md:text-sm cursor-pointer font-bold shadow">🔄 Switch Cam</button>
+                <button onclick="endCall()" class="bg-red-600 hover:bg-red-700 text-white font-bold px-5 py-2.5 rounded-xl transition text-xs md:text-sm cursor-pointer shadow">End Call 📴</button>
             </div>
         </div>
     </div>
@@ -167,8 +163,7 @@
             </div>
         </div>
     </div>
-
-        <script>
+    <script>
         const firebaseConfig = {
             apiKey: "AIzaSyBmVtAF5wQrcrzlfjpTAZoLDFbyrpr9FmY",
             authDomain: "secret-d7e10.firebaseapp.com",
@@ -193,7 +188,7 @@
         let incomingCallData = null;
         let isMuted = false;
         let isCameraOff = false;
-        let useFrontCamera = true; // Track current camera direction
+        let useFrontCamera = true;
         let currentCallType = 'video';
 
         const servers = {
@@ -624,7 +619,6 @@
             }
         }
 
-        // Switch Camera Function (Front to Back / Back to Front)
         async function switchCamera() {
             if (currentCallType !== 'video') {
                 alert("Switch camera is only available in video calls!");
@@ -642,7 +636,6 @@
                 localStream = await navigator.mediaDevices.getUserMedia(constraints);
                 document.getElementById('local-video').srcObject = localStream;
 
-                // Replace track in active peer connection
                 if (peerConnection) {
                     const videoTrack = localStream.getVideoTracks()[0];
                     const sender = peerConnection.getSenders().find(s => s.track && s.track.kind === 'video');
