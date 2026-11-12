@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Secure Group Secret Chat</title>
+    <title>Advanced Secret WhatsApp</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Firebase SDK -->
@@ -25,24 +25,21 @@
             width: 6px;
         }
         ::-webkit-scrollbar-track {
-            background: #0b141a;
+            background: var(--sb-track, #0b141a);
         }
         ::-webkit-scrollbar-thumb {
-            background: #202c33;
+            background: var(--sb-thumb, #202c33);
             border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #00a884;
         }
     </style>
 </head>
-<body class="bg-gradient-to-br from-[#0b141a] via-[#111b21] to-[#070d12] text-[#e9edef] h-screen flex flex-col justify-center items-center m-0 font-sans p-0 md:p-4">
+<body id="body-theme" class="bg-gradient-to-br from-[#0b141a] via-[#111b21] to-[#070d12] text-[#e9edef] h-screen flex flex-col justify-center items-center m-0 font-sans p-0 md:p-4 transition-colors duration-300">
 
     <!-- LOGIN SCREEN -->
     <div id="login-screen" class="bg-[#111b21]/95 backdrop-blur-xl p-8 rounded-2xl shadow-2xl w-96 border border-[#2a3942]/60 shadow-[0_0_30px_rgba(0,168,132,0.1)]">
         <div class="text-center mb-6">
             <div class="inline-block p-3 rounded-full bg-[#00a884]/10 text-[#00a884] text-3xl mb-2 shadow-[0_0_15px_rgba(0,168,132,0.3)]">👥</div>
-            <h1 class="text-2xl font-black tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-[#00a884] to-[#25d366]">Group Secret Chat</h1>
+            <h1 class="text-2xl font-black tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-[#00a884] to-[#25d366]">Secret WhatsApp</h1>
             <p class="text-xs text-[#8696a0] mt-1">Enter room & your name</p>
         </div>
         <div class="space-y-4">
@@ -61,9 +58,9 @@
     </div>
 
     <!-- CHAT SCREEN -->
-    <div id="chat-screen" class="hidden w-full max-w-4xl h-full md:h-[92vh] bg-[#111b21] md:rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-[#222d34] shadow-[0_0_40px_rgba(0,0,0,0.8)]">
+    <div id="chat-screen" class="hidden w-full max-w-4xl h-full md:h-[92vh] bg-[#111b21] md:rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-[#222d34] shadow-[0_0_40px_rgba(0,0,0,0.8)] transition-colors duration-300" id="chat-container-box">
         <!-- Chat Header -->
-        <div class="bg-[#202c33] px-5 py-3 flex items-center justify-between border-b border-[#2a3942]">
+        <div id="chat-header" class="bg-[#202c33] px-5 py-3 flex items-center justify-between border-b border-[#2a3942] transition-colors duration-300">
             <div class="flex items-center gap-3">
                 <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-[#00a884] to-[#25d366] flex items-center justify-center text-black font-bold text-base shadow">💬</div>
                 <div>
@@ -71,16 +68,20 @@
                     <p id="typing-status" class="text-[11px] text-[#00a884] h-3.5 font-medium animate-pulse">🟢 Active</p>
                 </div>
             </div>
-            <button onclick="leaveRoom()" class="text-xs bg-[#2a3942] hover:bg-[#374248] text-[#8696a0] hover:text-white px-3 py-1.5 rounded-lg transition font-semibold cursor-pointer border border-[#374248]">Leave Room</button>
+            <div class="flex items-center gap-2">
+                <!-- Theme Toggle Button -->
+                <button onclick="toggleTheme()" id="theme-btn" class="text-xs bg-[#2a3942] hover:bg-[#374248] text-[#8696a0] hover:text-white px-3 py-1.5 rounded-lg transition font-semibold cursor-pointer border border-[#374248]" title="Toggle Light/Dark Mode">☀️ Light</button>
+                <button onclick="leaveRoom()" class="text-xs bg-[#2a3942] hover:bg-[#374248] text-[#8696a0] hover:text-white px-3 py-1.5 rounded-lg transition font-semibold cursor-pointer border border-[#374248]">Leave Room</button>
+            </div>
         </div>
 
         <!-- Messages Box -->
-        <div id="messages-container" class="flex-1 p-5 overflow-y-auto space-y-4 bg-[#0b141a] bg-[radial-gradient(#111b21_1px,transparent_1px)] [background-size:16px_16px]">
+        <div id="messages-container" class="flex-1 p-5 overflow-y-auto space-y-4 bg-[#0b141a] transition-colors duration-300">
             <!-- Dynamic messages load here -->
         </div>
 
         <!-- Input Box -->
-        <div class="bg-[#202c33] px-4 py-2.5 flex items-center gap-2 border-t border-[#2a3942]">
+        <div id="chat-footer" class="bg-[#202c33] px-4 py-2.5 flex items-center gap-2 border-t border-[#2a3942] transition-colors duration-300">
             <input type="file" id="file-input" class="hidden" onchange="handleFileSelect(event)">
             <button onclick="document.getElementById('file-input').click()" class="text-[#8696a0] hover:text-[#00a884] p-2 rounded-full transition cursor-pointer text-xl flex items-center justify-center" title="Attach File / Image">
                 📎
@@ -142,6 +143,7 @@
         let currentUser = "";
         let typingTimeout = null;
         let selectedMessageKey = null;
+        let isDarkMode = true;
 
         const nameColors = {};
         const colorPalette = ['#00a884', '#34b7f1', '#ffbc42', '#ff5722', '#ab47bc', '#26a69a', '#ec407a'];
@@ -158,17 +160,67 @@
             return room.replace(/[.#$\/\[\]]/g, "_").toLowerCase();
         }
 
-        function joinRoom() {
+        // Check Local Storage on page load for active session & theme preference
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedRoom = localStorage.getItem('secret_chat_room');
+            const savedUser = localStorage.getItem('secret_chat_user');
+            const savedTheme = localStorage.getItem('secret_chat_theme');
+
+            if (savedTheme === 'light') {
+                toggleTheme(true);
+            }
+
+            if (savedRoom && savedUser) {
+                document.getElementById('room-input').value = savedRoom;
+                document.getElementById('name-input').value = savedUser;
+                // Auto login if session exists
+                joinRoom(true);
+            }
+        });
+
+        function toggleTheme(forcedLight = false) {
+            isDarkMode = forcedLight ? false : !isDarkMode;
+            const body = document.getElementById('body-theme');
+            const chatScreen = document.getElementById('chat-screen');
+            const chatHeader = document.getElementById('chat-header');
+            const chatFooter = document.getElementById('chat-footer');
+            const msgContainer = document.getElementById('messages-container');
+            const themeBtn = document.getElementById('theme-btn');
+
+            if (isDarkMode) {
+                body.className = "bg-gradient-to-br from-[#0b141a] via-[#111b21] to-[#070d12] text-[#e9edef] h-screen flex flex-col justify-center items-center m-0 font-sans p-0 md:p-4 transition-colors duration-300";
+                chatScreen.className = "w-full max-w-4xl h-full md:h-[92vh] bg-[#111b21] md:rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-[#222d34] shadow-[0_0_40px_rgba(0,0,0,0.8)] transition-colors duration-300";
+                chatHeader.className = "bg-[#202c33] px-5 py-3 flex items-center justify-between border-b border-[#2a3942] transition-colors duration-300";
+                chatFooter.className = "bg-[#202c33] px-4 py-2.5 flex items-center gap-2 border-t border-[#2a3942] transition-colors duration-300";
+                msgContainer.className = "flex-1 p-5 overflow-y-auto space-y-4 bg-[#0b141a] transition-colors duration-300";
+                themeBtn.innerText = "☀️ Light";
+                localStorage.setItem('secret_chat_theme', 'dark');
+            } else {
+                body.className = "bg-gradient-to-br from-[#f0f2f5] via-[#efeae2] to-[#d9dad7] text-[#111b21] h-screen flex flex-col justify-center items-center m-0 font-sans p-0 md:p-4 transition-colors duration-300";
+                chatScreen.className = "w-full max-w-4xl h-full md:h-[92vh] bg-white md:rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-gray-300 shadow-[0_0_40px_rgba(0,0,0,0.1)] transition-colors duration-300";
+                chatHeader.className = "bg-[#f0f2f5] px-5 py-3 flex items-center justify-between border-b border-gray-300 transition-colors duration-300";
+                chatFooter.className = "bg-[#f0f2f5] px-4 py-2.5 flex items-center gap-2 border-t border-gray-300 transition-colors duration-300";
+                msgContainer.className = "flex-1 p-5 overflow-y-auto space-y-4 bg-[#efeae2] transition-colors duration-300";
+                themeBtn.innerText = "🌙 Dark";
+                localStorage.setItem('secret_chat_theme', 'light');
+            }
+        }
+
+        function joinRoom(isAuto = false) {
             const rawRoom = document.getElementById('room-input').value.trim();
             const name = document.getElementById('name-input').value.trim();
 
             if (!rawRoom || !name) {
-                alert("Please fill in both fields!");
+                if (!isAuto) alert("Please fill in both fields!");
                 return;
             }
 
             currentRoom = sanitizeRoomName(rawRoom);
             currentUser = name;
+
+            // Save to Local Storage so user doesn't need to login again
+            localStorage.setItem('secret_chat_room', rawRoom);
+            localStorage.setItem('secret_chat_user', name);
 
             document.getElementById('login-screen').classList.add('hidden');
             document.getElementById('chat-screen').classList.remove('hidden');
@@ -206,6 +258,9 @@
 
         function leaveRoom() {
             updatePresence(false);
+            // Clear session storage on manual leave
+            localStorage.removeItem('secret_chat_room');
+            localStorage.removeItem('secret_chat_user');
             location.reload();
         }
 
@@ -391,10 +446,7 @@
 
             let actionButtons = '';
             if (!msg.deletedForEveryone) {
-                // Info button visible only for your own messages or everyone's messages? Here info is for your own messages, delete ONLY for your own messages.
                 const infoBtn = isMe ? `<button onclick="openMessageInfo('${key}')" class="bg-[#202c33] hover:bg-[#2a3942] text-[#8696a0] hover:text-[#00a884] px-1.5 py-0.5 rounded text-xs shadow border border-[#2a3942]" title="Message Info">ℹ️</button>` : '';
-                
-                // RESTRICTED: Delete button ONLY shows if `isMe` is true (you are the sender)
                 const deleteBtn = isMe ? `<button onclick="openDeleteModal('${key}')" class="bg-[#202c33] hover:bg-[#2a3942] text-[#8696a0] hover:text-red-400 px-1.5 py-0.5 rounded text-xs shadow border border-[#2a3942]" title="Delete Message">🗑️</button>` : '';
                 
                 if (infoBtn || deleteBtn) {
@@ -407,8 +459,10 @@
                 }
             }
 
+            const bubbleColor = isMe ? 'bg-[#005c4b] text-white' : (isDarkMode ? 'bg-[#202c33] text-white' : 'bg-white text-gray-900 border border-gray-200');
+
             messageDiv.innerHTML = `
-                <div class="relative max-w-[75%] md:max-w-[65%] rounded-2xl px-4 py-2 shadow-lg ${isMe ? 'bg-[#005c4b]' : 'bg-[#202c33]'} text-white ${isMe ? 'rounded-tr-none' : 'rounded-tl-none'}">
+                <div class="relative max-w-[75%] md:max-w-[65%] rounded-2xl px-4 py-2 shadow-lg ${bubbleColor} ${isMe ? 'rounded-tr-none' : 'rounded-tl-none'}">
                     ${actionButtons}
                     ${!isMe ? `<p class="text-xs font-bold mb-1" style="color: ${userColor};">${msg.sender}</p>` : ''}
                     ${contentHTML}
