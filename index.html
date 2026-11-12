@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Neon Dynamic Secret Chat</title>
+    <title>WhatsApp Secret Chat</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Firebase SDK -->
@@ -11,13 +11,12 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <style>
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
+            from { opacity: 0; transform: translateY(8px); }
             to { opacity: 1; transform: translateY(0); }
         }
         .message-anim {
-            animation: fadeIn 0.25s ease-out forwards;
+            animation: fadeIn 0.2s ease-out forwards;
         }
-        /* Custom Scrollbar for sleek look */
         ::-webkit-scrollbar {
             width: 6px;
         }
@@ -36,7 +35,7 @@
 <body class="bg-gradient-to-br from-[#0b141a] via-[#111b21] to-[#070d12] text-[#e9edef] h-screen flex flex-col justify-center items-center m-0 font-sans p-0 md:p-4">
 
     <!-- LOGIN SCREEN -->
-    <div id="login-screen" class="bg-[#111b21]/90 backdrop-blur-xl p-8 rounded-2xl shadow-2xl w-96 border border-[#2a3942]/60 shadow-[0_0_30px_rgba(0,168,132,0.1)]">
+    <div id="login-screen" class="bg-[#111b21]/95 backdrop-blur-xl p-8 rounded-2xl shadow-2xl w-96 border border-[#2a3942]/60 shadow-[0_0_30px_rgba(0,168,132,0.1)]">
         <div class="text-center mb-6">
             <div class="inline-block p-3 rounded-full bg-[#00a884]/10 text-[#00a884] text-3xl mb-2 shadow-[0_0_15px_rgba(0,168,132,0.3)]">💬</div>
             <h1 class="text-2xl font-black tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-[#00a884] to-[#25d366]">Secret WhatsApp</h1>
@@ -51,7 +50,7 @@
                 <label class="block text-[11px] font-bold uppercase tracking-wider text-[#00a884] mb-1">Your Nickname</label>
                 <input type="text" id="name-input" placeholder="e.g. Shadow" class="w-full bg-[#2a3942]/50 border border-[#374248] rounded-xl p-3 text-white focus:outline-none focus:border-[#00a884] focus:ring-1 focus:ring-[#00a884] transition">
             </div>
-            <button onclick="joinRoom()" class="w-full bg-gradient-to-r from-[#00a884] to-[#25d366] text-black font-bold p-3.5 rounded-xl hover:opacity-90 shadow-[0_4px_20px_rgba(0,168,132,0.4)] transition cursor-pointer active:scale-95">
+            <button onclick="joinRoom()" class="w-full bg-gradient-to-r from-[#00a884] to-[#25d366] text-black font-bold py-3 rounded-xl hover:opacity-90 shadow-[0_4px_20px_rgba(0,168,132,0.4)] transition cursor-pointer active:scale-95">
                 Join Secure Room 🚀
             </button>
         </div>
@@ -60,32 +59,38 @@
     <!-- CHAT SCREEN (Hidden by default) -->
     <div id="chat-screen" class="hidden w-full max-w-4xl h-full md:h-[92vh] bg-[#111b21] md:rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-[#222d34] shadow-[0_0_40px_rgba(0,0,0,0.8)]">
         <!-- Chat Header -->
-        <div class="bg-[#202c33] px-6 py-4 flex items-center justify-between border-b border-[#2a3942]">
+        <div class="bg-[#202c33] px-5 py-3 flex items-center justify-between border-b border-[#2a3942]">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-[#00a884] to-[#25d366] flex items-center justify-center text-black font-bold text-lg shadow">🔒</div>
+                <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-[#00a884] to-[#25d366] flex items-center justify-center text-black font-bold text-base shadow">🔒</div>
                 <div>
-                    <h2 id="room-title" class="font-bold text-white text-base tracking-wide">Room: </h2>
-                    <p id="typing-status" class="text-xs text-[#00a884] h-4 font-medium animate-pulse"></p>
+                    <h2 id="room-title" class="font-bold text-white text-sm md:text-base tracking-wide">Room: </h2>
+                    <p id="typing-status" class="text-[11px] text-[#00a884] h-3.5 font-medium animate-pulse"></p>
                 </div>
             </div>
-            <button onclick="leaveRoom()" class="text-xs bg-[#2a3942] hover:bg-[#374248] text-[#8696a0] hover:text-white px-3.5 py-2 rounded-xl transition font-semibold cursor-pointer border border-[#374248]">Leave Room</button>
+            <button onclick="leaveRoom()" class="text-xs bg-[#2a3942] hover:bg-[#374248] text-[#8696a0] hover:text-white px-3 py-1.5 rounded-lg transition font-semibold cursor-pointer border border-[#374248]">Leave Room</button>
         </div>
 
         <!-- Messages Box -->
-        <div id="messages-container" class="flex-1 p-6 overflow-y-auto space-y-4 bg-[#0b141a] bg-[radial-gradient(#111b21_1px,transparent_1px)] [background-size:16px_16px]">
+        <div id="messages-container" class="flex-1 p-5 overflow-y-auto space-y-3 bg-[#0b141a] bg-[radial-gradient(#111b21_1px,transparent_1px)] [background-size:16px_16px]">
             <!-- Dynamic messages load here -->
         </div>
 
-        <!-- Input Box -->
-        <div class="bg-[#202c33] p-4 flex items-center gap-3 border-t border-[#2a3942]">
+        <!-- Input Box (WhatsApp Exact Styling & Button Sizes) -->
+        <div class="bg-[#202c33] px-4 py-2.5 flex items-center gap-2 border-t border-[#2a3942]">
             <!-- Hidden File Input -->
             <input type="file" id="file-input" class="hidden" onchange="handleFileSelect(event)">
-            <button onclick="document.getElementById('file-input').click()" class="bg-[#2a3942] hover:bg-[#374248] text-[#8696a0] hover:text-[#00a884] p-3.5 rounded-xl transition cursor-pointer text-lg border border-[#374248]" title="Attach File / Image">
+            
+            <!-- WhatsApp Attachment Button (Compact Size) -->
+            <button onclick="document.getElementById('file-input').click()" class="text-[#8696a0] hover:text-[#00a884] p-2 rounded-full transition cursor-pointer text-xl flex items-center justify-center" title="Attach File / Image">
                 📎
             </button>
-            <input type="text" id="message-input" placeholder="Type a secure message..." oninput="updateTypingStatus()" onkeypress="handleKeyPress(event)" class="flex-1 bg-[#2a3942]/70 border border-[#374248] rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#00a884] transition">
-            <button onclick="sendMessage()" class="bg-gradient-to-r from-[#00a884] to-[#25d366] text-black font-bold p-3.5 px-6 rounded-xl hover:opacity-90 transition shadow-[0_0_15px_rgba(0,168,132,0.3)] cursor-pointer active:scale-95">
-                Send ✈️
+
+            <!-- Message Text Input -->
+            <input type="text" id="message-input" placeholder="Type a message" oninput="updateTypingStatus()" onkeypress="handleKeyPress(event)" class="flex-1 bg-[#2a3942] text-white text-sm rounded-lg px-4 py-2.5 focus:outline-none placeholder-[#8696a0]">
+
+            <!-- WhatsApp Send Button (Compact Size) -->
+            <button onclick="sendMessage()" class="text-[#8696a0] hover:text-[#00a884] p-2 rounded-full transition cursor-pointer text-xl flex items-center justify-center" title="Send Message">
+                <svg viewBox="0 0 24 24" height="24" width="24" preserveAspectRatio="xMidYMid meet" class="" version="1.1" x="0px" y="0px" enable-background="new 0 0 24 24" xml:space="preserve"><path fill="currentColor" d="M1.101,21.757L23.8,12.028L1.101,2.3l0.011,7.912l13.613,1.816L1.112,13.845 L1.101,21.757z"></path></svg>
             </button>
         </div>
     </div>
@@ -111,7 +116,6 @@
         let currentUser = "";
         let typingTimeout = null;
 
-        // Generate dynamic distinct colors for different senders
         const nameColors = {};
         const colorPalette = ['#00a884', '#34b7f1', '#ffbc42', '#ff5722', '#ab47bc', '#26a69a', '#ec407a'];
         function getColorForUser(name) {
@@ -182,7 +186,7 @@
                 if (typingUsers.length > 0) {
                     statusEl.innerText = typingUsers.join(', ') + " is typing...";
                 } else {
-                    statusEl.innerText = "🟢 End-to-End Secure";
+                    statusEl.innerText = "🟢 Online";
                 }
             });
         }
@@ -273,7 +277,7 @@
                 }
 
                 messageDiv.innerHTML = `
-                    <div class="max-w-[75%] md:max-w-[65%] rounded-2xl px-4 py-2.5 shadow-lg ${isMe ? 'bg-gradient-to-br from-[#005c4b] to-[#004d40] text-white rounded-tr-none border border-[#008f72]/30' : 'bg-[#202c33] text-white rounded-tl-none border border-[#2a3942]'}">
+                    <div class="max-w-[75%] md:max-w-[65%] rounded-2xl px-4 py-2 shadow-lg ${isMe ? 'bg-[#005c4b] text-white rounded-tr-none' : 'bg-[#202c33] text-white rounded-tl-none'}">
                         ${!isMe ? `<p class="text-xs font-bold mb-1" style="color: ${userColor};">${msg.sender}</p>` : ''}
                         ${contentHTML}
                         <div class="text-[10px] text-[#8696a0] text-right mt-1 font-medium">${msg.time || ''}</div>
