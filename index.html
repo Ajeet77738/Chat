@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
-    <title>Telegram Web - Secure Chat</title>
+    <title>Telegram Pro - Secure Chat & Calls</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Firebase SDK -->
@@ -21,6 +21,10 @@
         .anim-fade {
             animation: fadeIn 0.2s ease-out forwards;
         }
+        .msg-container:hover .msg-actions {
+            opacity: 1;
+            pointer-events: auto;
+        }
         ::-webkit-scrollbar {
             width: 4px;
         }
@@ -35,17 +39,17 @@
 </head>
 <body id="body-theme" class="bg-[#0f172a] text-[#e2e8f0] h-[100dvh] flex flex-col justify-center items-center m-0 font-sans p-0 md:p-4 overflow-hidden transition-colors duration-300">
 
-    <!-- TOAST POPUP NOTIFICATION -->
+    <!-- TOAST NOTIFICATION -->
     <div id="toast-popup" class="hidden fixed top-5 z-50 bg-[#2481cc] text-white px-6 py-3 rounded-xl shadow-2xl font-bold text-sm anim-fade transition-all">
-        Success Notification
+        Notification
     </div>
 
-    <!-- AUTH CONTAINER -->
+    <!-- AUTH SCREEN -->
     <div id="auth-screen" class="w-full max-w-md bg-[#17212b] text-white p-6 md:p-8 rounded-2xl shadow-2xl border border-[#232e3c] space-y-6 mx-4">
         <div class="text-center">
             <div class="inline-block p-3 rounded-full bg-[#2481cc]/20 text-[#2481cc] text-3xl mb-2 shadow">✈️</div>
-            <h1 class="text-2xl font-black tracking-wide">Telegram Secure</h1>
-            <p class="text-xs text-[#7f91a4] mt-1">Create your account to start chatting</p>
+            <h1 class="text-2xl font-black tracking-wide">Telegram Pro</h1>
+            <p class="text-xs text-[#7f91a4] mt-1">Secure Messaging & Media Calling</p>
         </div>
 
         <div class="flex bg-[#0e1621] p-1 rounded-xl border border-[#232e3c]">
@@ -55,37 +59,32 @@
 
         <!-- REGISTER FORM -->
         <div id="register-form" class="space-y-4">
-            <div class="bg-[#0e1621] border border-[#2481cc]/30 p-3 rounded-xl text-xs text-[#7f91a4] space-y-1">
-                <p class="font-bold text-[#2481cc]">📌 Registration Guidelines:</p>
-                <p>• Choose a unique username (no spaces).</p>
-                <p>• Password must be secure for your account data.</p>
-            </div>
             <div>
-                <label class="block text-[11px] font-bold uppercase tracking-wider text-[#7f91a4] mb-1">Your Full Name</label>
-                <input type="text" id="reg-name" placeholder="e.g. Alex Smith" class="w-full bg-[#0e1621] border border-[#232e3c] rounded-xl p-3 text-white text-sm focus:outline-none focus:border-[#2481cc] transition">
+                <label class="block text-[11px] font-bold uppercase tracking-wider text-[#7f91a4] mb-1">Full Name</label>
+                <input type="text" id="reg-name" placeholder="Alex Smith" class="w-full bg-[#0e1621] border border-[#232e3c] rounded-xl p-3 text-white text-sm focus:outline-none focus:border-[#2481cc]">
             </div>
             <div>
                 <label class="block text-[11px] font-bold uppercase tracking-wider text-[#7f91a4] mb-1">Unique Username</label>
-                <input type="text" id="reg-username" placeholder="e.g. alex_99" class="w-full bg-[#0e1621] border border-[#232e3c] rounded-xl p-3 text-white text-sm focus:outline-none focus:border-[#2481cc] transition">
+                <input type="text" id="reg-username" placeholder="alex_99" class="w-full bg-[#0e1621] border border-[#232e3c] rounded-xl p-3 text-white text-sm focus:outline-none focus:border-[#2481cc]">
             </div>
             <div>
                 <label class="block text-[11px] font-bold uppercase tracking-wider text-[#7f91a4] mb-1">Password</label>
-                <input type="password" id="reg-password" placeholder="••••••••" class="w-full bg-[#0e1621] border border-[#232e3c] rounded-xl p-3 text-white text-sm focus:outline-none focus:border-[#2481cc] transition">
+                <input type="password" id="reg-password" placeholder="••••••••" class="w-full bg-[#0e1621] border border-[#232e3c] rounded-xl p-3 text-white text-sm focus:outline-none focus:border-[#2481cc]">
             </div>
-            <button onclick="handleRegister()" class="w-full bg-[#2481cc] hover:bg-[#1d6fa5] text-white font-bold py-3 rounded-xl transition cursor-pointer shadow-lg text-sm">Create Account</button>
+            <button onclick="handleRegister()" class="w-full bg-[#2481cc] hover:bg-[#1d6fa5] text-white font-bold py-3 rounded-xl transition cursor-pointer text-sm shadow">Create Account</button>
         </div>
 
         <!-- LOGIN FORM -->
         <div id="login-form" class="space-y-4 hidden">
             <div>
                 <label class="block text-[11px] font-bold uppercase tracking-wider text-[#7f91a4] mb-1">Unique Username</label>
-                <input type="text" id="login-username" placeholder="e.g. alex_99" class="w-full bg-[#0e1621] border border-[#232e3c] rounded-xl p-3 text-white text-sm focus:outline-none focus:border-[#2481cc] transition">
+                <input type="text" id="login-username" placeholder="alex_99" class="w-full bg-[#0e1621] border border-[#232e3c] rounded-xl p-3 text-white text-sm focus:outline-none focus:border-[#2481cc]">
             </div>
             <div>
                 <label class="block text-[11px] font-bold uppercase tracking-wider text-[#7f91a4] mb-1">Password</label>
-                <input type="password" id="login-password" placeholder="••••••••" class="w-full bg-[#0e1621] border border-[#232e3c] rounded-xl p-3 text-white text-sm focus:outline-none focus:border-[#2481cc] transition">
+                <input type="password" id="login-password" placeholder="••••••••" class="w-full bg-[#0e1621] border border-[#232e3c] rounded-xl p-3 text-white text-sm focus:outline-none focus:border-[#2481cc]">
             </div>
-            <button onclick="handleLogin()" class="w-full bg-[#2481cc] hover:bg-[#1d6fa5] text-white font-bold py-3 rounded-xl transition cursor-pointer shadow-lg text-sm">Sign In</button>
+            <button onclick="handleLogin()" class="w-full bg-[#2481cc] hover:bg-[#1d6fa5] text-white font-bold py-3 rounded-xl transition cursor-pointer text-sm shadow">Sign In</button>
         </div>
     </div>
 
@@ -116,13 +115,11 @@
                 <div class="flex items-center gap-3">
                     <button onclick="toggleDrawer()" class="text-white text-xl p-1.5 hover:bg-[#202b38] rounded-xl transition cursor-pointer" title="Menu">☰</button>
                     <div class="flex-1 relative">
-                        <input type="text" id="search-user-input" oninput="handleSearchInput(this.value)" placeholder="Search username (e.g. alex)..." class="w-full bg-[#0e1621] text-xs text-white rounded-xl py-2.5 px-3 pl-8 focus:outline-none border border-[#232e3c]">
+                        <input type="text" id="search-user-input" oninput="handleSearchInput(this.value)" placeholder="Search username..." class="w-full bg-[#0e1621] text-xs text-white rounded-xl py-2.5 px-3 pl-8 focus:outline-none border border-[#232e3c]">
                         <span class="absolute left-2.5 top-3 text-xs text-[#7f91a4]">🔍</span>
                     </div>
                 </div>
             </div>
-
-            <!-- Recent Chats / Search Results List -->
             <div id="chats-list-container" class="flex-1 overflow-y-auto divide-y divide-[#232e3c]/40 p-2 space-y-1"></div>
         </div>
 
@@ -130,7 +127,7 @@
         <div id="chat-window-area" class="hidden md:flex flex-1 flex-col bg-[#0e1621] h-full absolute md:relative inset-0 z-20 md:z-auto">
             <div id="no-chat-selected" class="hidden md:flex flex-1 flex-col items-center justify-center p-6 text-center text-[#7f91a4]">
                 <div class="text-5xl mb-3">💬</div>
-                <p class="text-sm font-medium">Select a chat from the sidebar or search a username to start messaging</p>
+                <p class="text-sm font-medium">Select a chat from sidebar to start messaging & calling</p>
             </div>
 
             <!-- Active Chat Interface -->
@@ -145,13 +142,28 @@
                             <p id="active-chat-status" class="text-[11px] text-[#2481cc]">online</p>
                         </div>
                     </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="startCall('audio')" class="bg-[#202b38] hover:bg-[#2c3b4e] text-white p-2 rounded-xl transition cursor-pointer" title="Audio Call">📞</button>
+                        <button onclick="startCall('video')" class="bg-[#202b38] hover:bg-[#2c3b4e] text-white p-2 rounded-xl transition cursor-pointer" title="Video Call">📹</button>
+                    </div>
                 </div>
 
                 <!-- Messages Stream -->
                 <div id="chat-messages-box" class="flex-1 p-4 overflow-y-auto space-y-3 bg-[radial-gradient(#17212b_1px,transparent_1px)] [background-size:20px_20px]"></div>
 
+                <!-- Reply Preview Box -->
+                <div id="reply-preview-box" class="hidden bg-[#17212b] px-4 py-2 border-t border-[#232e3c] flex items-center justify-between text-xs">
+                    <div class="border-l-4 border-[#2481cc] pl-3 overflow-hidden">
+                        <span id="reply-to-user" class="font-bold text-[#2481cc]"></span>
+                        <p id="reply-to-text" class="text-[#7f91a4] truncate"></p>
+                    </div>
+                    <button onclick="cancelReply()" class="text-[#7f91a4] hover:text-white font-bold text-base">&times;</button>
+                </div>
+
                 <!-- Chat Input Footer -->
                 <div class="bg-[#17212b] px-4 py-3 flex items-center gap-2 border-t border-[#232e3c]">
+                    <input type="file" id="file-input" class="hidden" onchange="handleFileSelect(event)">
+                    <button onclick="document.getElementById('file-input').click()" class="text-[#7f91a4] hover:text-[#2481cc] p-2 rounded-full transition cursor-pointer text-xl" title="Attach File/Image">📎</button>
                     <input type="text" id="chat-message-input" placeholder="Write a message..." onkeypress="handleChatKeyPress(event)" class="flex-1 bg-[#0e1621] text-white text-sm rounded-xl px-4 py-2.5 focus:outline-none border border-[#232e3c] placeholder-[#7f91a4]">
                     <button onclick="sendDirectMessage()" class="bg-[#2481cc] hover:bg-[#1d6fa5] text-white p-2.5 rounded-xl transition cursor-pointer flex items-center justify-center shadow" title="Send">
                         <svg viewBox="0 0 24 24" height="20" width="20" preserveAspectRatio="xMidYMid meet" version="1.1"><path fill="currentColor" d="M1.101,21.757L23.8,12.028L1.101,2.3l0.011,7.912l13.613,1.816L1.112,13.845 L1.101,21.757z"></path></svg>
@@ -161,7 +173,52 @@
         </div>
     </div>
 
-    <!-- MY PROFILE MODAL -->
+    <!-- CALL UI MODAL -->
+    <div id="call-modal" class="hidden fixed inset-0 bg-black/95 z-50 flex flex-col items-center justify-center p-4">
+        <div class="relative w-full max-w-3xl bg-[#17212b] rounded-2xl overflow-hidden border border-[#232e3c] shadow-2xl flex flex-col items-center p-6 space-y-4">
+            <h3 id="call-status-text" class="text-white font-bold text-lg animate-pulse">Connecting Call...</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 w-full justify-items-center">
+                <div class="relative w-full max-w-sm">
+                    <video id="remote-video" autoplay playsinline class="w-full h-48 md:h-64 bg-black rounded-xl object-cover border border-[#232e3c] shadow-xl"></video>
+                    <span class="absolute bottom-2 left-2 bg-black/70 px-2 py-0.5 rounded text-[10px] text-white">Participant</span>
+                </div>
+                <div class="relative w-full max-w-sm">
+                    <video id="local-video" autoplay playsinline muted class="w-full h-48 md:h-64 bg-black rounded-xl object-cover border border-[#232e3c] shadow-xl"></video>
+                    <span class="absolute bottom-2 left-2 bg-black/70 px-2 py-0.5 rounded text-[10px] text-white">You</span>
+                </div>
+            </div>
+            <audio id="remote-audio" autoplay></audio>
+            <div class="flex items-center gap-3 flex-wrap justify-center mt-2">
+                <button onclick="endCall()" class="bg-red-600 hover:bg-red-700 text-white font-bold px-6 py-2.5 rounded-xl transition text-sm cursor-pointer shadow">End Call 📴</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- INCOMING CALL MODAL -->
+    <div id="incoming-call-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-[#17212b] border border-[#232e3c] p-6 rounded-2xl w-80 shadow-2xl text-center space-y-4">
+            <div class="text-4xl animate-bounce">📞</div>
+            <h3 id="incoming-caller-text" class="font-bold text-white text-base">Incoming Call...</h3>
+            <div class="flex gap-3">
+                <button onclick="acceptCall()" class="flex-1 bg-[#2481cc] hover:bg-[#1d6fa5] text-white font-bold py-2.5 rounded-xl transition text-sm">Accept ✅</button>
+                <button onclick="rejectCall()" class="flex-1 bg-red-600/20 hover:bg-red-600/30 text-red-400 border border-red-500/30 py-2.5 rounded-xl font-medium transition text-sm">Decline ❌</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- EDIT MESSAGE MODAL -->
+    <div id="edit-modal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-[#17212b] text-white border border-[#232e3c] p-6 rounded-2xl w-full max-w-sm shadow-2xl space-y-4">
+            <h3 class="font-bold text-base">Edit Message</h3>
+            <input type="text" id="edit-msg-input" class="w-full bg-[#0e1621] border border-[#232e3c] rounded-xl p-3 text-white text-sm focus:outline-none focus:border-[#2481cc]">
+            <div class="flex gap-2">
+                <button onclick="saveEditedMessage()" class="flex-1 bg-[#2481cc] hover:bg-[#1d6fa5] text-white font-bold py-2 rounded-xl text-sm transition cursor-pointer">Save</button>
+                <button onclick="closeEditModal()" class="flex-1 bg-[#202b38] text-[#7f91a4] hover:text-white py-2 rounded-xl text-sm transition cursor-pointer">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PROFILE MODAL -->
     <div id="profile-modal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-[#17212b] text-white border border-[#232e3c] p-6 rounded-2xl w-full max-w-sm shadow-2xl space-y-4">
             <div class="flex justify-between items-center border-b border-[#232e3c] pb-3">
@@ -169,18 +226,9 @@
                 <button onclick="closeProfileModal()" class="text-[#7f91a4] hover:text-white text-lg font-bold">&times;</button>
             </div>
             <div class="space-y-3">
-                <div>
-                    <label class="block text-[11px] font-bold uppercase tracking-wider text-[#7f91a4] mb-1">Full Name</label>
-                    <input type="text" id="edit-profile-name" class="w-full bg-[#0e1621] border border-[#232e3c] rounded-xl p-3 text-white text-sm focus:outline-none focus:border-[#2481cc]">
-                </div>
-                <div>
-                    <label class="block text-[11px] font-bold uppercase tracking-wider text-[#7f91a4] mb-1">Unique Username</label>
-                    <input type="text" id="edit-profile-username" class="w-full bg-[#0e1621] border border-[#232e3c] rounded-xl p-3 text-white text-sm focus:outline-none focus:border-[#2481cc]">
-                </div>
-                <div>
-                    <label class="block text-[11px] font-bold uppercase tracking-wider text-[#7f91a4] mb-1">Upload Profile Picture</label>
-                    <input type="file" id="edit-profile-file" accept="image/*" class="w-full bg-[#0e1621] border border-[#232e3c] rounded-xl p-2 text-white text-xs file:mr-4 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-[#2481cc] file:text-white hover:file:bg-[#1d6fa5] cursor-pointer">
-                </div>
+                <input type="text" id="edit-profile-name" placeholder="Full Name" class="w-full bg-[#0e1621] border border-[#232e3c] rounded-xl p-3 text-white text-sm focus:outline-none focus:border-[#2481cc]">
+                <input type="text" id="edit-profile-username" placeholder="Username" class="w-full bg-[#0e1621] border border-[#232e3c] rounded-xl p-3 text-white text-sm focus:outline-none focus:border-[#2481cc]">
+                <input type="file" id="edit-profile-file" accept="image/*" class="w-full bg-[#0e1621] border border-[#232e3c] rounded-xl p-2 text-white text-xs file:mr-4 file:py-1 file:px-3 file:rounded-lg file:bg-[#2481cc] file:text-white cursor-pointer">
             </div>
             <div class="space-y-2 pt-2">
                 <button onclick="saveProfileChanges()" class="w-full bg-[#2481cc] hover:bg-[#1d6fa5] text-white font-bold py-2.5 rounded-xl text-sm transition cursor-pointer">Save Changes</button>
@@ -188,8 +236,7 @@
             </div>
         </div>
     </div>
-
-        <script>
+    <script>
         const firebaseConfig = {
             apiKey: "AIzaSyBmVtAF5wQrcrzlfjpTAZoLDFbyrpr9FmY",
             authDomain: "secret-d7e10.firebaseapp.com",
@@ -208,14 +255,20 @@
         let messagesListenerRef = null;
         let tempProfilePicBase64 = "";
         let isDarkMode = true;
+        
+        let replyingTo = null;
+        let editingMsgKey = null;
+
+        let peerConnection;
+        let localStream;
+        let incomingCallData = null;
+        const servers = { iceServers: [{ urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] }] };
 
         function showToast(message) {
             const toast = document.getElementById('toast-popup');
             toast.innerText = message;
             toast.classList.remove('hidden');
-            setTimeout(() => {
-                toast.classList.add('hidden');
-            }, 3000);
+            setTimeout(() => toast.classList.add('hidden'), 3000);
         }
 
         function switchTab(tab) {
@@ -238,10 +291,9 @@
         }
 
         window.addEventListener('DOMContentLoaded', () => {
-            const savedUser = localStorage.getItem('tg_secure_user');
-            const savedTheme = localStorage.getItem('tg_secure_theme');
+            const savedUser = localStorage.getItem('tg_pro_user');
+            const savedTheme = localStorage.getItem('tg_pro_theme');
             if (savedTheme === 'light') toggleTheme(true);
-
             if (savedUser) {
                 loggedInUser = JSON.parse(savedUser);
                 enterTelegramApp();
@@ -251,263 +303,157 @@
         function toggleTheme(forcedLight = false) {
             isDarkMode = forcedLight ? false : !isDarkMode;
             const body = document.getElementById('body-theme');
-            const themeIcon = document.getElementById('theme-icon');
-            const themeText = document.getElementById('theme-text');
-
             if (isDarkMode) {
                 body.className = "bg-[#0f172a] text-[#e2e8f0] h-[100dvh] flex flex-col justify-center items-center m-0 font-sans p-0 md:p-4 overflow-hidden transition-colors duration-300";
-                if(themeIcon) themeIcon.innerText = "🌙";
-                if(themeText) themeText.innerText = "Dark Mode";
-                localStorage.setItem('tg_secure_theme', 'dark');
+                localStorage.setItem('tg_pro_theme', 'dark');
             } else {
                 body.className = "bg-[#f1f5f9] text-[#0f172a] h-[100dvh] flex flex-col justify-center items-center m-0 font-sans p-0 md:p-4 overflow-hidden transition-colors duration-300";
-                if(themeIcon) themeIcon.innerText = "☀️";
-                if(themeText) themeText.innerText = "Light Mode";
-                localStorage.setItem('tg_secure_theme', 'light');
+                localStorage.setItem('tg_pro_theme', 'light');
             }
         }
 
         function toggleDrawer() {
-            const drawer = document.getElementById('sidebar-drawer');
-            const backdrop = document.getElementById('drawer-backdrop');
-            drawer.classList.toggle('-translate-x-full');
-            backdrop.classList.toggle('hidden');
+            document.getElementById('sidebar-drawer').classList.toggle('-translate-x-full');
+            document.getElementById('drawer-backdrop').classList.toggle('hidden');
         }
 
         function handleRegister() {
             const name = document.getElementById('reg-name').value.trim();
-            let username = document.getElementById('reg-username').value.trim().toLowerCase();
+            let username = document.getElementById('reg-username').value.trim().toLowerCase().replace(/[^a-zA-Z0-9_]/g, "");
             const password = document.getElementById('reg-password').value.trim();
 
-            if (!name || !username || !password) {
-                alert("Please fill in all registration fields!");
-                return;
-            }
+            if (!name || !username || !password) return alert("Fill in all fields!");
 
-            username = username.replace(/[^a-zA-Z0-9_]/g, "");
-
-            db.ref(`users/${username}`).once('value', (snapshot) => {
-                if (snapshot.exists()) {
-                    alert("Username already taken! Choose another one.");
-                } else {
-                    const userData = { name, username, password, profilePic: "", online: true, lastSeen: Date.now() };
-                    db.ref(`users/${username}`).set(userData).then(() => {
-                        loggedInUser = userData;
-                        localStorage.setItem('tg_secure_user', JSON.stringify(userData));
-                        showToast("Registration Successful! 🎉");
-                        setTimeout(() => enterTelegramApp(), 1000);
-                    });
-                }
+            db.ref(`users/${username}`).once('value', snap => {
+                if (snap.exists()) return alert("Username already taken!");
+                const userData = { name, username, password, profilePic: "", online: true };
+                db.ref(`users/${username}`).set(userData).then(() => {
+                    loggedInUser = userData;
+                    localStorage.setItem('tg_pro_user', JSON.stringify(userData));
+                    showToast("Registered Successfully! 🎉");
+                    setTimeout(enterTelegramApp, 1000);
+                });
             });
         }
 
         function handleLogin() {
             let username = document.getElementById('login-username').value.trim().toLowerCase();
             const password = document.getElementById('login-password').value.trim();
+            if (!username || !password) return alert("Fill in credentials!");
 
-            if (!username || !password) {
-                alert("Please enter username and password!");
-                return;
-            }
-
-            db.ref(`users/${username}`).once('value', (snapshot) => {
-                if (!snapshot.exists()) {
-                    alert("Username not found! Please register first.");
-                    return;
-                }
-                const userData = snapshot.val();
-                if (userData.password !== password) {
-                    alert("Incorrect password!");
-                    return;
-                }
-
-                loggedInUser = userData;
-                localStorage.setItem('tg_secure_user', JSON.stringify(userData));
-                showToast("Login Successful! Welcome back 👋");
-                setTimeout(() => enterTelegramApp(), 1000);
+            db.ref(`users/${username}`).once('value', snap => {
+                if (!snap.exists()) return alert("User not found!");
+                const data = snap.val();
+                if (data.password !== password) return alert("Incorrect password!");
+                loggedInUser = data;
+                localStorage.setItem('tg_pro_user', JSON.stringify(data));
+                showToast("Welcome back!");
+                setTimeout(enterTelegramApp, 1000);
             });
         }
 
         function enterTelegramApp() {
             document.getElementById('auth-screen').classList.add('hidden');
             document.getElementById('telegram-screen').classList.remove('hidden');
-
             updateDrawerProfile();
-            updateOnlineStatus(true);
             loadRecentChats();
+            listenForCalls();
         }
 
         function updateDrawerProfile() {
             document.getElementById('drawer-name').innerText = loggedInUser.name;
             document.getElementById('drawer-handle').innerText = "@" + loggedInUser.username;
-            
-            const avatarDiv = document.getElementById('drawer-avatar');
-            if (loggedInUser.profilePic) {
-                avatarDiv.innerHTML = `<img src="${loggedInUser.profilePic}" class="w-full h-full object-cover rounded-full">`;
-            } else {
-                avatarDiv.innerText = loggedInUser.name.charAt(0).toUpperCase();
-            }
+            const av = document.getElementById('drawer-avatar');
+            av.innerHTML = loggedInUser.profilePic ? `<img src="${loggedInUser.profilePic}" class="w-full h-full object-cover rounded-full">` : loggedInUser.name.charAt(0).toUpperCase();
         }
 
         function openProfileModal() {
             toggleDrawer();
             document.getElementById('edit-profile-name').value = loggedInUser.name;
             document.getElementById('edit-profile-username').value = loggedInUser.username;
-            document.getElementById('edit-profile-file').value = "";
-            tempProfilePicBase64 = loggedInUser.profilePic || "";
             document.getElementById('profile-modal').classList.remove('hidden');
         }
+        function closeProfileModal() { document.getElementById('profile-modal').classList.add('hidden'); }
 
-        function closeProfileModal() {
-            document.getElementById('profile-modal').classList.add('hidden');
-        }
-
-        document.getElementById('edit-profile-file').addEventListener('change', function(e) {
+        document.getElementById('edit-profile-file').addEventListener('change', e => {
             const file = e.target.files[0];
-            if (!file) return;
-            if (file.size > 1000000) {
-                alert("Image size should be under 1MB!");
-                return;
+            if (file && file.size < 1000000) {
+                const reader = new FileReader();
+                reader.onload = event => tempProfilePicBase64 = event.target.result;
+                reader.readAsDataURL(file);
             }
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                tempProfilePicBase64 = event.target.result;
-            };
-            reader.readAsDataURL(file);
         });
 
         function saveProfileChanges() {
             const newName = document.getElementById('edit-profile-name').value.trim();
-            let newUsername = document.getElementById('edit-profile-username').value.trim().toLowerCase();
-            newUsername = newUsername.replace(/[^a-zA-Z0-9_]/g, "");
-
-            if (!newName || !newUsername) {
-                alert("Name and username cannot be empty!");
-                return;
-            }
-
-            const oldUsername = loggedInUser.username;
-
-            if (newUsername !== oldUsername) {
-                db.ref(`users/${newUsername}`).once('value', (snapshot) => {
-                    if (snapshot.exists()) {
-                        alert("This username is already taken by someone else!");
-                    } else {
-                        const updatedData = { ...loggedInUser, name: newName, username: newUsername, profilePic: tempProfilePicBase64 };
-                        db.ref(`users/${newUsername}`).set(updatedData).then(() => {
-                            db.ref(`users/${oldUsername}`).remove().then(() => {
-                                loggedInUser = updatedData;
-                                localStorage.setItem('tg_secure_user', JSON.stringify(loggedInUser));
-                                updateDrawerProfile();
-                                closeProfileModal();
-                                showToast("Profile & Username Updated! ✔️");
-                            });
-                        });
-                    }
-                });
-            } else {
-                loggedInUser.name = newName;
-                loggedInUser.profilePic = tempProfilePicBase64;
-
-                db.ref(`users/${oldUsername}`).update({
-                    name: newName,
-                    profilePic: tempProfilePicBase64
-                }).then(() => {
-                    localStorage.setItem('tg_secure_user', JSON.stringify(loggedInUser));
-                    updateDrawerProfile();
-                    closeProfileModal();
-                    showToast("Profile Updated Successfully! ✔️");
-                });
-            }
-        }
-
-        function deleteAccount() {
-            if (confirm("Are you sure you want to delete your account? This action cannot be undone.")) {
-                const username = loggedInUser.username;
-                db.ref(`users/${username}`).remove().then(() => {
-                    localStorage.removeItem('tg_secure_user');
-                    showToast("Account deleted successfully.");
-                    setTimeout(() => location.reload(), 1000);
-                });
-            }
-        }
-
-        function updateOnlineStatus(isOnline) {
-            if (!loggedInUser) return;
-            db.ref(`users/${loggedInUser.username}`).update({
-                online: isOnline,
-                lastSeen: Date.now()
+            if (!newName) return;
+            loggedInUser.name = newName;
+            if (tempProfilePicBase64) loggedInUser.profilePic = tempProfilePicBase64;
+            db.ref(`users/${loggedInUser.username}`).update(loggedInUser).then(() => {
+                localStorage.setItem('tg_pro_user', JSON.stringify(loggedInUser));
+                updateDrawerProfile();
+                closeProfileModal();
+                showToast("Profile Updated!");
             });
         }
 
-        window.addEventListener('beforeunload', () => {
-            if (loggedInUser) {
-                db.ref(`users/${loggedInUser.username}`).update({ online: false, lastSeen: Date.now() });
+        function deleteAccount() {
+            if (confirm("Delete account permanently?")) {
+                db.ref(`users/${loggedInUser.username}`).remove().then(() => {
+                    localStorage.removeItem('tg_pro_user');
+                    location.reload();
+                });
             }
-        });
-
-        function logout() {
-            updateOnlineStatus(false);
-            localStorage.removeItem('tg_secure_user');
-            location.reload();
         }
+
+        function logout() { localStorage.removeItem('tg_pro_user'); location.reload(); }
 
         function loadRecentChats() {
             const container = document.getElementById('chats-list-container');
-            
-            db.ref('chats').on('value', (snapshot) => {
-                const allChats = snapshot.val() || {};
+            db.ref('chats').on('value', snap => {
+                const allChats = snap.val() || {};
                 container.innerHTML = "";
-                let chatPartners = [];
+                let partners = [];
 
                 for (let chatId in allChats) {
                     if (chatId.includes(loggedInUser.username)) {
-                        const usersInChat = chatId.split('_');
-                        if (usersInChat.length !== 2) continue;
-                        const partnerUsername = usersInChat[0] === loggedInUser.username ? usersInChat[1] : usersInChat[0];
-                        
-                        const messages = allChats[chatId].messages || {};
-                        let lastMsg = "";
-                        let lastTime = "";
-                        let unreadCount = 0;
+                        const users = chatId.split('_');
+                        if (users.length !== 2) continue;
+                        const partner = users[0] === loggedInUser.username ? users[1] : users[0];
+                        const msgs = allChats[chatId].messages || {};
+                        let lastMsg = "", lastTime = "", unread = 0;
 
-                        for (let msgKey in messages) {
-                            const m = messages[msgKey];
-                            lastMsg = m.text;
+                        for (let k in msgs) {
+                            const m = msgs[k];
+                            lastMsg = m.type === 'text' ? m.text : `[${m.type}]`;
                             lastTime = m.time;
-                            if (m.sender !== loggedInUser.username && !m.read) {
-                                unreadCount++;
-                            }
+                            if (m.sender !== loggedInUser.username && !m.read) unread++;
                         }
-
-                        chatPartners.push({ partnerUsername, lastMsg, lastTime, unreadCount, chatId });
+                        partners.push({ partner, lastMsg, lastTime, unread });
                     }
                 }
 
-                if (chatPartners.length === 0) {
-                    container.innerHTML = `<p class="text-xs text-[#7f91a4] text-center p-4">No recent chats. Search a username above to start!</p>`;
+                if (partners.length === 0) {
+                    container.innerHTML = `<p class="text-xs text-[#7f91a4] text-center p-4">No recent chats. Search username above!</p>`;
                     return;
                 }
 
-                chatPartners.forEach(chat => {
-                    db.ref(`users/${chat.partnerUsername}`).once('value', (uSnap) => {
-                        if (uSnap.exists()) {
-                            const partnerUser = uSnap.val();
-                            renderChatListItem(partnerUser, chat.lastMsg, chat.lastTime, chat.unreadCount);
-                        }
+                partners.forEach(p => {
+                    db.ref(`users/${p.partner}`).once('value', uSnap => {
+                        if (uSnap.exists()) renderChatListItem(uSnap.val(), p.lastMsg, p.lastTime, p.unread);
                     });
                 });
             });
         }
 
-        function renderChatListItem(user, lastMsg, lastTime, unreadCount) {
+        function renderChatListItem(user, lastMsg, lastTime, unread) {
             const container = document.getElementById('chats-list-container');
             const existing = document.getElementById(`chat-item-${user.username}`);
             if (existing) existing.remove();
 
             const initial = user.name.charAt(0).toUpperCase();
-            const picHTML = user.profilePic ? `<img src="${user.profilePic}" class="w-full h-full object-cover rounded-full">` : initial;
-            const unreadBadge = unreadCount > 0 ? `<span class="bg-[#2481cc] text-white text-[10px] font-bold px-2 py-0.5 rounded-full">${unreadCount}</span>` : '';
+            const pic = user.profilePic ? `<img src="${user.profilePic}" class="w-full h-full object-cover rounded-full">` : initial;
+            const badge = unread > 0 ? `<span class="bg-[#2481cc] text-white text-[10px] font-bold px-2 py-0.5 rounded-full">${unread}</span>` : '';
 
             const div = document.createElement('div');
             div.id = `chat-item-${user.username}`;
@@ -515,16 +461,10 @@
             div.onclick = () => selectChatUser(user);
 
             div.innerHTML = `
-                <div class="relative w-11 h-11 rounded-full bg-[#2481cc] flex items-center justify-center font-bold text-white text-sm overflow-hidden shadow">${picHTML}</div>
+                <div class="relative w-11 h-11 rounded-full bg-[#2481cc] flex items-center justify-center font-bold text-white text-sm overflow-hidden shadow">${pic}</div>
                 <div class="flex-1 overflow-hidden">
-                    <div class="flex justify-between items-center">
-                        <h4 class="font-bold text-white text-sm truncate">${escapeHTML(user.name)}</h4>
-                        <span class="text-[10px] text-[#7f91a4]">${lastTime || ''}</span>
-                    </div>
-                    <div class="flex justify-between items-center mt-0.5">
-                        <p class="text-xs text-[#7f91a4] truncate pr-2">${escapeHTML(lastMsg || 'Started a chat')}</p>
-                        ${unreadBadge}
-                    </div>
+                    <div class="flex justify-between items-center"><h4 class="font-bold text-white text-sm truncate">${escapeHTML(user.name)}</h4><span class="text-[10px] text-[#7f91a4]">${lastTime}</span></div>
+                    <div class="flex justify-between items-center mt-0.5"><p class="text-xs text-[#7f91a4] truncate pr-2">${escapeHTML(lastMsg)}</p>${badge}</div>
                 </div>
             `;
             container.appendChild(div);
@@ -533,64 +473,36 @@
         function handleSearchInput(query) {
             const q = query.toLowerCase().trim();
             const container = document.getElementById('chats-list-container');
-
-            if (!q) {
-                loadRecentChats();
-                return;
-            }
+            if (!q) { loadRecentChats(); return; }
 
             container.innerHTML = "";
-            db.ref('users').once('value', (snapshot) => {
+            db.ref('users').once('value', snap => {
                 let found = false;
-                snapshot.forEach((childSnap) => {
-                    const user = childSnap.val();
+                snap.forEach(child => {
+                    const user = child.val();
                     if (user.username !== loggedInUser.username && user.username.includes(q)) {
                         found = true;
-                        const initial = user.name.charAt(0).toUpperCase();
-                        const picHTML = user.profilePic ? `<img src="${user.profilePic}" class="w-full h-full object-cover rounded-full">` : initial;
-
+                        const pic = user.profilePic ? `<img src="${user.profilePic}" class="w-full h-full object-cover rounded-full">` : user.name.charAt(0);
                         const div = document.createElement('div');
                         div.className = "flex items-center gap-3 p-3 cursor-pointer hover:bg-[#202b38] rounded-xl transition";
                         div.onclick = () => selectChatUser(user);
-
-                        div.innerHTML = `
-                            <div class="relative w-11 h-11 rounded-full bg-[#2481cc] flex items-center justify-center font-bold text-white text-sm overflow-hidden shadow">${picHTML}</div>
-                            <div class="flex-1 overflow-hidden">
-                                <h4 class="font-bold text-white text-sm truncate">${escapeHTML(user.name)}</h4>
-                                <p class="text-xs text-[#7f91a4] truncate">@${escapeHTML(user.username)}</p>
-                            </div>
-                        `;
+                        div.innerHTML = `<div class="w-11 h-11 rounded-full bg-[#2481cc] flex items-center justify-center font-bold text-white text-sm overflow-hidden shadow">${pic}</div><div><h4 class="font-bold text-white text-sm">${escapeHTML(user.name)}</h4><p class="text-xs text-[#7f91a4]">@${user.username}</p></div>`;
                         container.appendChild(div);
                     }
                 });
-
-                if (!found) {
-                    container.innerHTML = `<p class="text-xs text-[#7f91a4] text-center p-4">No user found with username "@${escapeHTML(q)}"</p>`;
-                }
+                if (!found) container.innerHTML = `<p class="text-xs text-[#7f91a4] text-center p-4">No user found</p>`;
             });
         }
 
         function selectChatUser(user) {
             activeChatUser = user;
-
-            const chatWindowArea = document.getElementById('chat-window-area');
-            const noChatSelected = document.getElementById('no-chat-selected');
-            const activeChatBox = document.getElementById('active-chat-box');
-
-            noChatSelected.classList.add('hidden');
-            activeChatBox.classList.remove('hidden');
-            chatWindowArea.classList.remove('hidden');
+            document.getElementById('no-chat-selected').classList.add('hidden');
+            document.getElementById('active-chat-box').classList.remove('hidden');
+            document.getElementById('chat-window-area').classList.remove('hidden');
 
             document.getElementById('active-chat-name').innerText = user.name;
-            document.getElementById('active-chat-status').innerText = user.online ? 'online' : 'offline';
-            
-            const avatarBox = document.getElementById('active-chat-avatar');
-            if (user.profilePic) {
-                avatarBox.innerHTML = `<img src="${user.profilePic}" class="w-full h-full object-cover rounded-full">`;
-            } else {
-                avatarBox.innerText = user.name.charAt(0).toUpperCase();
-            }
-
+            const av = document.getElementById('active-chat-avatar');
+            av.innerHTML = user.profilePic ? `<img src="${user.profilePic}" class="w-full h-full object-cover rounded-full">` : user.name.charAt(0);
             loadDirectMessages();
         }
 
@@ -601,74 +513,214 @@
             loadRecentChats();
         }
 
-        function getChatRoomId(user1, user2) {
-            return user1 < user2 ? `${user1}_${user2}` : `${user2}_${user1}`;
-        }
+        function getChatRoomId(u1, u2) { return u1 < u2 ? `${u1}_${u2}` : `${u2}_${u1}`; }
 
         function loadDirectMessages() {
-            const msgBox = document.getElementById('chat-messages-box');
-            msgBox.innerHTML = "";
-
-            if (messagesListenerRef) {
-                messagesListenerRef.off();
-            }
+            const box = document.getElementById('chat-messages-box');
+            box.innerHTML = "";
+            if (messagesListenerRef) messagesListenerRef.off();
 
             const chatId = getChatRoomId(loggedInUser.username, activeChatUser.username);
             messagesListenerRef = db.ref(`chats/${chatId}/messages`);
-            
-            messagesListenerRef.on('child_added', (snapshot) => {
-                const msg = snapshot.val();
+
+            messagesListenerRef.on('child_added', snap => {
+                const msg = snap.val();
                 if (!msg) return;
-
                 if (msg.sender === activeChatUser.username && !msg.read) {
-                    db.ref(`chats/${chatId}/messages/${snapshot.key}/read`).set(true);
+                    db.ref(`chats/${chatId}/messages/${snap.key}/read`).set(true);
                 }
+                renderChatMessage(snap.key, msg);
+            });
 
-                renderChatMessage(msg);
+            messagesListenerRef.on('child_changed', snap => {
+                const el = document.getElementById(`msg-${snap.key}`);
+                if (el) {
+                    const m = snap.val();
+                    if (m.deleted) el.innerHTML = `<p class="italic text-xs text-[#7f91a4]">This message was deleted</p>`;
+                    else {
+                        const contentEl = el.querySelector('.msg-content');
+                        if (contentEl) contentEl.innerText = m.text + (m.edited ? ' (edited)' : '');
+                    }
+                }
             });
         }
 
-        function renderChatMessage(msg) {
-            const msgBox = document.getElementById('chat-messages-box');
+        function renderChatMessage(key, msg) {
+            const box = document.getElementById('chat-messages-box');
+            if (document.getElementById(`msg-${key}`)) return;
             const isMe = msg.sender === loggedInUser.username;
 
             const div = document.createElement('div');
-            div.className = `flex ${isMe ? 'justify-end' : 'justify-start'} anim-fade my-1`;
+            div.id = `msg-${key}`;
+            div.className = `flex ${isMe ? 'justify-end' : 'justify-start'} anim-fade my-1 relative msg-container`;
 
-            div.innerHTML = `
-                <div class="max-w-[75%] md:max-w-[70%] rounded-2xl px-4 py-2 shadow-md ${isMe ? 'bg-[#2b5278] text-white rounded-tr-none' : 'bg-[#182533] text-white rounded-tl-none'}">
-                    <p class="break-words text-sm leading-relaxed">${escapeHTML(msg.text)}</p>
-                    <div class="text-[10px] text-[#7f91a4] text-right mt-1 font-medium">${msg.time}</div>
+            if (msg.deleted) {
+                div.innerHTML = `<div class="max-w-[70%] rounded-2xl px-4 py-2 bg-[#182533] text-[#7f91a4] text-xs italic">This message was deleted</div>`;
+                box.appendChild(div);
+                box.scrollTop = box.scrollHeight;
+                return;
+            }
+
+            let bodyHtml = '';
+            if (msg.replyTo) {
+                bodyHtml += `<div class="bg-black/20 border-l-2 border-[#2481cc] px-2 py-0.5 mb-1 rounded text-xs"><p class="font-bold text-[#2481cc]">${msg.replyTo.sender}</p><p class="truncate text-[#7f91a4]">${msg.replyTo.text}</p></div>`;
+            }
+
+            if (msg.type === 'image') {
+                bodyHtml += `<a href="${msg.fileData}" target="_blank"><img src="${msg.fileData}" class="max-w-xs rounded-xl max-h-48 object-cover mb-1"></a>`;
+            } else if (msg.type === 'file') {
+                bodyHtml += `<a href="${msg.fileData}" download="${msg.fileName}" class="flex items-center gap-2 bg-[#0e1621] p-2 rounded-xl mb-1 text-xs"><span class="text-xl">📄</span><span class="truncate underline">${msg.fileName}</span></a>`;
+            } else {
+                bodyHtml += `<p class="msg-content break-words text-sm leading-relaxed">${escapeHTML(msg.text)}${msg.edited ? ' <span class="text-[9px] text-[#7f91a4]">(edited)</span>' : ''}</p>`;
+            }
+
+            const ticks = isMe ? `<span class="${msg.read ? 'text-[#34b7f1]' : 'text-[#7f91a4]'} font-bold">✓✓</span>` : '';
+            const actions = `
+                <div class="msg-actions opacity-0 transition absolute -top-3 ${isMe ? 'left-2' : 'right-2'} flex gap-1 bg-[#17212b] border border-[#232e3c] rounded-lg px-1.5 py-0.5 text-xs shadow">
+                    <button onclick="setReply('${escapeHTML(msg.text || msg.fileName)}', '${msg.sender}')" title="Reply">↩️</button>
+                    ${isMe && msg.type === 'text' ? `<button onclick="openEditModal('${key}', '${escapeHTML(msg.text)}')" title="Edit">✏️</button>` : ''}
+                    ${isMe ? `<button onclick="deleteMessage('${key}')" title="Delete">🗑️</button>` : ''}
                 </div>
             `;
-            msgBox.appendChild(div);
-            msgBox.scrollTop = msgBox.scrollHeight;
+
+            div.innerHTML = `
+                <div class="relative max-w-[75%] md:max-w-[70%] rounded-2xl px-4 py-2 shadow-md ${isMe ? 'bg-[#2b5278] text-white rounded-tr-none' : 'bg-[#182533] text-white rounded-tl-none'}">
+                    ${actions}
+                    ${bodyHtml}
+                    <div class="text-[10px] text-[#7f91a4] text-right mt-1 flex items-center justify-end gap-1 font-medium"><span>${msg.time}</span>${ticks}</div>
+                </div>
+            `;
+            box.appendChild(div);
+            box.scrollTop = box.scrollHeight;
         }
 
-        function handleChatKeyPress(e) {
-            if (e.key === 'Enter') {
-                sendDirectMessage();
-            }
+        // Messaging actions
+        function setReply(text, sender) {
+            replyingTo = { text, sender };
+            document.getElementById('reply-to-user').innerText = sender;
+            document.getElementById('reply-to-text').innerText = text;
+            document.getElementById('reply-preview-box').classList.remove('hidden');
         }
+        function cancelReply() { replyingTo = null; document.getElementById('reply-preview-box').classList.add('hidden'); }
+
+        function openEditModal(key, text) { editingMsgKey = key; document.getElementById('edit-msg-input').value = text; document.getElementById('edit-modal').classList.remove('hidden'); }
+        function closeEditModal() { editingMsgKey = null; document.getElementById('edit-modal').classList.add('hidden'); }
+        function saveEditedMessage() {
+            if (!editingMsgKey) return;
+            const newText = document.getElementById('edit-msg-input').value.trim();
+            const chatId = getChatRoomId(loggedInUser.username, activeChatUser.username);
+            db.ref(`chats/${chatId}/messages/${editingMsgKey}`).update({ text: newText, edited: true });
+            closeEditModal();
+        }
+
+        function deleteMessage(key) {
+            const chatId = getChatRoomId(loggedInUser.username, activeChatUser.username);
+            db.ref(`chats/${chatId}/messages/${key}`).update({ deleted: true, text: "", fileData: "" });
+        }
+
+        function handleFileSelect(e) {
+            const file = e.target.files[0];
+            if (!file || file.size > 2000000) return alert("File under 2MB allowed!");
+            const reader = new FileReader();
+            reader.onload = event => {
+                const chatId = getChatRoomId(loggedInUser.username, activeChatUser.username);
+                const msgData = {
+                    sender: loggedInUser.username,
+                    fileData: event.target.result,
+                    fileName: file.name,
+                    type: file.type.startsWith('image/') ? 'image' : 'file',
+                    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                    read: false, timestamp: Date.now()
+                };
+                db.ref(`chats/${chatId}/messages`).push(msgData);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function handleChatKeyPress(e) { if (e.key === 'Enter') sendDirectMessage(); }
 
         function sendDirectMessage() {
             const input = document.getElementById('chat-message-input');
             const text = input.value.trim();
-            if (!text || !activeChatUser) return;
+            if (!text) return;
 
             const chatId = getChatRoomId(loggedInUser.username, activeChatUser.username);
-            const timeString = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
             const msgData = {
                 sender: loggedInUser.username,
-                text: text,
-                time: timeString,
-                read: false,
+                text, type: 'text',
+                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                read: false, replyTo: replyingTo ? { sender: replyingTo.sender, text: replyingTo.text } : null,
                 timestamp: Date.now()
             };
-
             db.ref(`chats/${chatId}/messages`).push(msgData);
             input.value = "";
+            cancelReply();
+        }
+
+        // WebRTC Audio/Video Call System
+        async function startCall(type) {
+            document.getElementById('call-modal').classList.remove('hidden');
+            document.getElementById('call-status-text').innerText = "Starting " + type + " call...";
+            try {
+                localStream = await navigator.mediaDevices.getUserMedia({ video: type === 'video', audio: true });
+                document.getElementById('local-video').srcObject = localStream;
+
+                peerConnection = new RTCPeerConnection(servers);
+                localStream.getTracks().forEach(t => peerConnection.addTrack(t, localStream));
+                peerConnection.ontrack = e => document.getElementById('remote-video').srcObject = e.streams[0];
+                peerConnection.onicecandidate = e => { if (e.candidate) db.ref(`chats/${getChatRoomId(loggedInUser.username, activeChatUser.username)}/call/candidates`).push(e.candidate.toJSON()); };
+
+                const offer = await peerConnection.createOffer();
+                await peerConnection.setLocalDescription(offer);
+
+                db.ref(`chats/${getChatRoomId(loggedInUser.username, activeChatUser.username)}/call`).set({ type, caller: loggedInUser.username, offer: { type: offer.type, sdp: offer.sdp } });
+            } catch (err) { alert("Mic/Camera error"); endCall(); }
+        }
+
+        function listenForCalls() {
+            db.ref('chats').on('value', snap => {
+                const all = snap.val() || {};
+                for (let cid in all) {
+                    if (cid.includes(loggedInUser.username)) {
+                        const call = all[cid].call;
+                        if (call && call.caller !== loggedInUser.username && !peerConnection) {
+                            incomingCallData = { ...call, chatId: cid };
+                            document.getElementById('incoming-caller-text').innerText = `${call.caller} is calling (${call.type})...`;
+                            document.getElementById('incoming-call-modal').classList.remove('hidden');
+                        }
+                    }
+                }
+            });
+        }
+
+        async function acceptCall() {
+            document.getElementById('incoming-call-modal').classList.add('hidden');
+            document.getElementById('call-modal').classList.remove('hidden');
+            try {
+                localStream = await navigator.mediaDevices.getUserMedia({ video: incomingCallData.type === 'video', audio: true });
+                document.getElementById('local-video').srcObject = localStream;
+
+                peerConnection = new RTCPeerConnection(servers);
+                localStream.getTracks().forEach(t => peerConnection.addTrack(t, localStream));
+                peerConnection.ontrack = e => document.getElementById('remote-video').srcObject = e.streams[0];
+                peerConnection.onicecandidate = e => { if (e.candidate) db.ref(`chats/${incomingCallData.chatId}/call/candidates`).push(e.candidate.toJSON()); };
+
+                await peerConnection.setRemoteDescription(new RTCSessionDescription(incomingCallData.offer));
+                const answer = await peerConnection.createAnswer();
+                await peerConnection.setLocalDescription(answer);
+
+                db.ref(`chats/${incomingCallData.chatId}/call/answer`).set({ type: answer.type, sdp: answer.sdp });
+                document.getElementById('call-status-text').innerText = "Connected 🟢";
+            } catch(e) { endCall(); }
+        }
+
+        function rejectCall() { document.getElementById('incoming-call-modal').classList.add('hidden'); db.ref(`chats/${incomingCallData.chatId}/call`).remove(); }
+        function endCall() {
+            if (localStream) localStream.getTracks().forEach(t => t.stop());
+            if (peerConnection) peerConnection.close();
+            peerConnection = null;
+            document.getElementById('call-modal').classList.add('hidden');
+            if (activeChatUser) db.ref(`chats/${getChatRoomId(loggedInUser.username, activeChatUser.username)}/call`).remove();
         }
 
         function escapeHTML(str) {
