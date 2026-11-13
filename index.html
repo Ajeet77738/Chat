@@ -187,8 +187,7 @@
             <button onclick="saveProfileChanges()" class="w-full bg-[#2481cc] hover:bg-[#1d6fa5] text-white font-bold py-2.5 rounded-xl text-sm transition cursor-pointer">Save Changes</button>
         </div>
     </div>
-
-        <script>
+    <script>
         const firebaseConfig = {
             apiKey: "AIzaSyBmVtAF5wQrcrzlfjpTAZoLDFbyrpr9FmY",
             authDomain: "secret-d7e10.firebaseapp.com",
@@ -207,7 +206,6 @@
         let messagesListenerRef = null;
         let tempProfilePicBase64 = "";
         let isDarkMode = true;
-        let recentChatsMap = {}; // Tracks chat metadata for sidebar
 
         function showToast(message) {
             const toast = document.getElementById('toast-popup');
@@ -452,8 +450,8 @@
 
                 for (let chatId in allChats) {
                     if (chatId.includes(loggedInUser.username)) {
-                        // Extract other user's username from chatId (format: user1_user2)
                         const usersInChat = chatId.split('_');
+                        if (usersInChat.length !== 2) continue;
                         const partnerUsername = usersInChat[0] === loggedInUser.username ? usersInChat[1] : usersInChat[0];
                         
                         const messages = allChats[chatId].messages || {};
@@ -479,7 +477,6 @@
                     return;
                 }
 
-                // Fetch partner details from users node and render
                 chatPartners.forEach(chat => {
                     db.ref(`users/${chat.partnerUsername}`).once('value', (uSnap) => {
                         if (uSnap.exists()) {
@@ -493,7 +490,6 @@
 
         function renderChatListItem(user, lastMsg, lastTime, unreadCount) {
             const container = document.getElementById('chats-list-container');
-            // Remove existing if present to avoid duplication
             const existing = document.getElementById(`chat-item-${user.username}`);
             if (existing) existing.remove();
 
@@ -527,7 +523,7 @@
             const container = document.getElementById('chats-list-container');
 
             if (!q) {
-                loadRecentChats(); // Reload recent chats if search is cleared
+                loadRecentChats();
                 return;
             }
 
@@ -607,7 +603,6 @@
 
             const chatId = getChatRoomId(loggedInUser.username, activeChatUser.username);
             
-            // Mark all messages from partner as read
             db.ref(`chats/${chatId}/messages`).once('value', (snap) => {
                 const msgs = snap.val() || {};
                 for (let k in msgs) {
@@ -622,7 +617,6 @@
                 const msg = snapshot.val();
                 if (msg.sender !== activeChatUser.username && msg.sender !== loggedInUser.username) return;
                 
-                // Mark incoming message as read if chat is open
                 if (msg.sender === activeChatUser.username && !msg.read) {
                     db.ref(`chats/${chatId}/messages/${snapshot.key}/read`).set(true);
                 }
