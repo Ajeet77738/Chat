@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ultimate Group Secret WhatsApp</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Telegram Web - Secure Chat</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Firebase SDK -->
@@ -11,163 +11,140 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <style>
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(8px); }
+            from { opacity: 0; transform: translateY(6px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        .message-anim {
+        .anim-fade {
             animation: fadeIn 0.2s ease-out forwards;
         }
-        .msg-container:hover .msg-actions {
-            opacity: 1;
-            pointer-events: auto;
-        }
         ::-webkit-scrollbar {
-            width: 6px;
+            width: 5px;
         }
         ::-webkit-scrollbar-track {
-            background: var(--sb-track, #0b141a);
+            background: #0e1621;
         }
         ::-webkit-scrollbar-thumb {
-            background: var(--sb-thumb, #202c33);
-            border-radius: 4px;
+            background: #232e3c;
+            border-radius: 3px;
         }
     </style>
 </head>
-<body id="body-theme" class="bg-gradient-to-br from-[#0b141a] via-[#111b21] to-[#070d12] text-[#e9edef] h-screen flex flex-col justify-center items-center m-0 font-sans p-0 md:p-4 transition-colors duration-300">
+<body class="bg-[#0f172a] text-[#e2e8f0] h-screen flex flex-col justify-center items-center m-0 font-sans p-0 md:p-4 overflow-hidden">
 
-    <!-- LOGIN SCREEN -->
-    <div id="login-screen" class="bg-[#111b21]/95 backdrop-blur-xl p-8 rounded-2xl shadow-2xl w-96 border border-[#2a3942]/60 shadow-[0_0_30px_rgba(0,168,132,0.1)]">
-        <div class="text-center mb-6">
-            <div class="inline-block p-3 rounded-full bg-[#00a884]/10 text-[#00a884] text-3xl mb-2 shadow-[0_0_15px_rgba(0,168,132,0.3)]">👥</div>
-            <h1 class="text-2xl font-black tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-[#00a884] to-[#25d366]">Secret WhatsApp</h1>
-            <p class="text-xs text-[#8696a0] mt-1">Enter room & your name</p>
+    <!-- AUTH CONTAINER (Register / Login) -->
+    <div id="auth-screen" class="w-full max-w-md bg-[#17212b] p-8 rounded-2xl shadow-2xl border border-[#232e3c] space-y-6">
+        <div class="text-center">
+            <div class="inline-block p-3 rounded-full bg-[#2481cc]/20 text-[#2481cc] text-3xl mb-2 shadow">✈️</div>
+            <h1 id="auth-title" class="text-2xl font-black text-white tracking-wide">Telegram Secure</h1>
+            <p id="auth-subtitle" class="text-xs text-[#7f91a4] mt-1">Connect with anyone using unique username</p>
         </div>
-        <div class="space-y-4">
+
+        <!-- Forms Tabs Switcher -->
+        <div class="flex bg-[#0e1621] p-1 rounded-xl border border-[#232e3c]">
+            <button onclick="switchTab('login')" id="tab-login-btn" class="flex-1 py-2 text-xs font-bold rounded-lg transition bg-[#2481cc] text-white cursor-pointer">Login</button>
+            <button onclick="switchTab('register')" id="tab-register-btn" class="flex-1 py-2 text-xs font-bold rounded-lg transition text-[#7f91a4] cursor-pointer">Register</button>
+        </div>
+
+        <!-- LOGIN FORM -->
+        <div id="login-form" class="space-y-4">
             <div>
-                <label class="block text-[11px] font-bold uppercase tracking-wider text-[#00a884] mb-1">Room Passcode</label>
-                <input type="text" id="room-input" placeholder="e.g. group-room-123" class="w-full bg-[#2a3942]/50 border border-[#374248] rounded-xl p-3 text-white focus:outline-none focus:border-[#00a884] focus:ring-1 focus:ring-[#00a884] transition">
+                <label class="block text-[11px] font-bold uppercase tracking-wider text-[#7f91a4] mb-1">Unique Username</label>
+                <input type="text" id="login-username" placeholder="e.g. alex_99" class="w-full bg-[#0e1621] border border-[#232e3c] rounded-xl p-3 text-white focus:outline-none focus:border-[#2481cc] transition">
             </div>
             <div>
-                <label class="block text-[11px] font-bold uppercase tracking-wider text-[#00a884] mb-1">Your Nickname</label>
-                <input type="text" id="name-input" placeholder="e.g. Alex" class="w-full bg-[#2a3942]/50 border border-[#374248] rounded-xl p-3 text-white focus:outline-none focus:border-[#00a884] focus:ring-1 focus:ring-[#00a884] transition">
+                <label class="block text-[11px] font-bold uppercase tracking-wider text-[#7f91a4] mb-1">Password</label>
+                <input type="password" id="login-password" placeholder="••••••••" class="w-full bg-[#0e1621] border border-[#232e3c] rounded-xl p-3 text-white focus:outline-none focus:border-[#2481cc] transition">
             </div>
-            <button onclick="joinRoom()" class="w-full bg-gradient-to-r from-[#00a884] to-[#25d366] text-black font-bold py-3 rounded-xl hover:opacity-90 shadow-[0_4px_20px_rgba(0,168,132,0.4)] transition cursor-pointer active:scale-95">
-                Join Secure Room 🚀
-            </button>
-        </div>
-    </div>
-        <!-- CHAT SCREEN -->
-    <div id="chat-screen" class="hidden w-full max-w-4xl h-full md:h-[92vh] bg-[#111b21] md:rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-[#222d34] shadow-[0_0_40px_rgba(0,0,0,0.8)] transition-colors duration-300">
-        <!-- Chat Header -->
-        <div id="chat-header" class="bg-[#202c33] px-5 py-3 flex items-center justify-between border-b border-[#2a3942] transition-colors duration-300">
-            <div class="flex items-center gap-3">
-                <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-[#00a884] to-[#25d366] flex items-center justify-center text-black font-bold text-base shadow">💬</div>
-                <div>
-                    <h2 id="room-title" class="font-bold text-white text-sm md:text-base tracking-wide">Room: </h2>
-                    <p id="typing-status" class="text-[11px] text-[#00a884] h-3.5 font-medium animate-pulse">🟢 Active</p>
-                </div>
-            </div>
-            <div class="flex items-center gap-2">
-                <button onclick="startCall('audio')" class="bg-[#2a3942] hover:bg-[#374248] text-white p-2 rounded-lg transition text-sm cursor-pointer" title="Voice Call">📞</button>
-                <button onclick="startCall('video')" class="bg-[#2a3942] hover:bg-[#374248] text-white p-2 rounded-lg transition text-sm cursor-pointer" title="Video Call">📹</button>
-                <button onclick="toggleTheme()" id="theme-btn" class="text-xs bg-[#2a3942] hover:bg-[#374248] text-[#8696a0] hover:text-white px-2.5 py-2 rounded-lg transition font-semibold cursor-pointer border border-[#374248]" title="Toggle Mode">☀️</button>
-                <button onclick="leaveRoom()" class="text-xs bg-[#2a3942] hover:bg-[#374248] text-[#8696a0] hover:text-white px-3 py-2 rounded-lg transition font-semibold cursor-pointer border border-[#374248]">Leave</button>
-            </div>
+            <button onclick="handleLogin()" class="w-full bg-[#2481cc] hover:bg-[#1d6fa5] text-white font-bold py-3 rounded-xl transition cursor-pointer shadow-lg">Sign In</button>
         </div>
 
-        <!-- Messages Box -->
-        <div id="messages-container" class="flex-1 p-5 overflow-y-auto space-y-4 bg-[#0b141a] transition-colors duration-300">
-            <!-- Dynamic messages load here -->
-        </div>
-
-        <!-- Reply Preview Box (Hidden by default) -->
-        <div id="reply-preview-container" class="hidden bg-[#1f2c34] px-4 py-2 border-t border-[#2a3942] flex items-center justify-between">
-            <div class="border-l-4 border-[#00a884] pl-3 overflow-hidden">
-                <p id="reply-preview-sender" class="text-xs font-bold text-[#00a884]"></p>
-                <p id="reply-preview-text" class="text-xs text-[#8696a0] truncate max-w-md"></p>
+        <!-- REGISTER FORM -->
+        <div id="register-form" class="space-y-4 hidden">
+            <!-- Instructions Box -->
+            <div class="bg-[#0e1621] border border-[#2481cc]/30 p-3 rounded-xl text-xs text-[#7f91a4] space-y-1">
+                <p class="font-bold text-[#2481cc]">📌 Registration Guidelines:</p>
+                <p>• Choose a unique username (no spaces).</p>
+                <p>• Password must be secure for your account data.</p>
             </div>
-            <button onclick="cancelReply()" class="text-[#8696a0] hover:text-white font-bold text-sm px-2">&times;</button>
-        </div>
-
-        <!-- Input Box -->
-        <div id="chat-footer" class="bg-[#202c33] px-4 py-2.5 flex items-center gap-2 border-t border-[#2a3942] transition-colors duration-300">
-            <input type="file" id="file-input" class="hidden" onchange="handleFileSelect(event)">
-            <button onclick="document.getElementById('file-input').click()" class="text-[#8696a0] hover:text-[#00a884] p-2 rounded-full transition cursor-pointer text-xl flex items-center justify-center" title="Attach File / Image">
-                📎
-            </button>
-            <input type="text" id="message-input" placeholder="Type a message" oninput="updateTypingStatus()" onkeypress="handleKeyPress(event)" class="flex-1 bg-[#2a3942] text-white text-sm rounded-lg px-4 py-2.5 focus:outline-none placeholder-[#8696a0]">
-            <button onclick="sendMessage()" class="text-[#8696a0] hover:text-[#00a884] p-2 rounded-full transition cursor-pointer text-xl flex items-center justify-center" title="Send Message">
-                <svg viewBox="0 0 24 24" height="24" width="24" preserveAspectRatio="xMidYMid meet" version="1.1" x="0px" y="0px"><path fill="currentColor" d="M1.101,21.757L23.8,12.028L1.101,2.3l0.011,7.912l13.613,1.816L1.112,13.845 L1.101,21.757z"></path></svg>
-            </button>
-        </div>
-    </div>
-        <!-- CALL UI MODAL WITH SWITCH CAMERA -->
-    <div id="call-modal" class="hidden fixed inset-0 bg-black/95 z-50 flex flex-col items-center justify-center p-4">
-        <div class="relative w-full max-w-4xl bg-[#111b21] rounded-2xl overflow-hidden border border-[#2a3942] shadow-2xl flex flex-col items-center p-4 md:p-6 space-y-4">
-            <h3 id="call-status-text" class="text-white font-bold text-lg animate-pulse">Call Active</h3>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 w-full justify-items-center">
-                <div class="relative w-full max-w-sm">
-                    <video id="remote-video" autoplay playsinline class="w-full h-48 md:h-64 bg-black rounded-xl object-cover border border-[#2a3942] shadow-xl"></video>
-                    <span class="absolute bottom-2 left-2 bg-black/70 px-2 py-0.5 rounded text-[10px] text-white">Participant</span>
-                </div>
-                <div class="relative w-full max-w-sm">
-                    <video id="local-video" autoplay playsinline muted class="w-full h-48 md:h-64 bg-black rounded-xl object-cover border border-[#2a3942] shadow-xl"></video>
-                    <span class="absolute bottom-2 left-2 bg-black/70 px-2 py-0.5 rounded text-[10px] text-white">You</span>
-                </div>
+            <div>
+                <label class="block text-[11px] font-bold uppercase tracking-wider text-[#7f91a4] mb-1">Your Full Name</label>
+                <input type="text" id="reg-name" placeholder="e.g. Alex Smith" class="w-full bg-[#0e1621] border border-[#232e3c] rounded-xl p-3 text-white focus:outline-none focus:border-[#2481cc] transition">
             </div>
-            <audio id="remote-audio" autoplay></audio>
-
-            <div class="flex items-center gap-2 md:gap-3 flex-wrap justify-center mt-2">
-                <button id="mute-btn" onclick="toggleMute()" class="bg-[#2a3942] hover:bg-[#374248] text-white px-3.5 py-2.5 rounded-xl transition text-xs md:text-sm cursor-pointer font-medium shadow">🎙️ Mute</button>
-                <button id="cam-btn" onclick="toggleCamera()" class="bg-[#2a3942] hover:bg-[#374248] text-white px-3.5 py-2.5 rounded-xl transition text-xs md:text-sm cursor-pointer font-medium shadow">📹 Stop Cam</button>
-                <button id="switch-cam-btn" onclick="switchCamera()" class="bg-[#00a884] hover:bg-[#008f72] text-black px-4 py-2.5 rounded-xl transition text-xs md:text-sm cursor-pointer font-bold shadow">🔄 Switch Cam</button>
-                <button onclick="endCall()" class="bg-red-600 hover:bg-red-700 text-white font-bold px-5 py-2.5 rounded-xl transition text-xs md:text-sm cursor-pointer shadow">End Call 📴</button>
+            <div>
+                <label class="block text-[11px] font-bold uppercase tracking-wider text-[#7f91a4] mb-1">Unique Username</label>
+                <input type="text" id="reg-username" placeholder="e.g. alex_99" class="w-full bg-[#0e1621] border border-[#232e3c] rounded-xl p-3 text-white focus:outline-none focus:border-[#2481cc] transition">
             </div>
+            <div>
+                <label class="block text-[11px] font-bold uppercase tracking-wider text-[#7f91a4] mb-1">Password</label>
+                <input type="password" id="reg-password" placeholder="••••••••" class="w-full bg-[#0e1621] border border-[#232e3c] rounded-xl p-3 text-white focus:outline-none focus:border-[#2481cc] transition">
+            </div>
+            <button onclick="handleRegister()" class="w-full bg-[#2481cc] hover:bg-[#1d6fa5] text-white font-bold py-3 rounded-xl transition cursor-pointer shadow-lg">Create Account</button>
         </div>
     </div>
 
-    <!-- INCOMING CALL RINGING MODAL -->
-    <div id="incoming-call-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-[#202c33] border border-[#2a3942] p-6 rounded-2xl w-80 shadow-2xl text-center space-y-4">
-            <div class="text-4xl animate-bounce">📞</div>
-            <h3 id="incoming-caller-text" class="font-bold text-white text-base">Incoming Call...</h3>
-            <div class="flex gap-3">
-                <button onclick="acceptCall()" class="flex-1 bg-[#00a884] hover:bg-[#008f72] text-black font-bold py-2.5 rounded-xl transition">Accept ✅</button>
-                <button onclick="rejectCall()" class="flex-1 bg-red-600/20 hover:bg-red-600/30 text-red-400 border border-red-500/30 py-2.5 rounded-xl font-medium transition">Decline ❌</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- MESSAGE INFO MODAL -->
-    <div id="info-modal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-[#202c33] border border-[#2a3942] p-6 rounded-2xl w-full max-w-md shadow-2xl space-y-4">
-            <div class="flex justify-between items-center border-b border-[#2a3942] pb-3">
-                <h3 class="font-bold text-white text-base">Message Info</h3>
-                <button onclick="closeInfoModal()" class="text-[#8696a0] hover:text-white text-lg font-bold">&times;</button>
-            </div>
-            <div class="space-y-4 max-h-60 overflow-y-auto">
-                <div>
-                    <p class="text-xs font-bold text-[#00a884] uppercase tracking-wider mb-2">Read by</p>
-                    <div id="read-by-list" class="space-y-1 text-sm text-white"></div>
+    <!-- TELEGRAM MAIN CHAT INTERFACE (2-Column Layout) -->
+    <div id="telegram-screen" class="hidden w-full max-w-5xl h-full md:h-[94vh] bg-[#17212b] md:rounded-2xl shadow-2xl flex overflow-hidden border border-[#232e3c]">
+        
+        <!-- LEFT SIDEBAR -->
+        <div class="w-full md:w-80 bg-[#17212b] border-r border-[#232e3c] flex flex-col h-full">
+            <!-- Sidebar Header with Search -->
+            <div class="p-3 bg-[#17212b] border-b border-[#232e3c] flex flex-col gap-2">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <div id="user-avatar" class="w-9 h-9 rounded-full bg-[#2481cc] flex items-center justify-center font-bold text-white text-sm shadow">A</div>
+                        <div>
+                            <h3 id="current-user-name" class="font-bold text-white text-sm">User</h3>
+                            <p class="text-[10px] text-[#7f91a4]" id="current-user-handle">@handle</p>
+                        </div>
+                    </div>
+                    <button onclick="logout()" class="text-xs text-[#7f91a4] hover:text-red-400 p-2 transition cursor-pointer" title="Logout">🚪</button>
                 </div>
-                <div>
-                    <p class="text-xs font-bold text-[#8696a0] uppercase tracking-wider mb-2">Delivered to</p>
-                    <div id="delivered-to-list" class="space-y-1 text-sm text-white"></div>
+                <!-- Search Bar -->
+                <div class="relative mt-1">
+                    <input type="text" id="search-user-input" oninput="filterUsers(this.value)" placeholder="Search users by username..." class="w-full bg-[#0e1621] text-xs text-white rounded-xl py-2 px-3 pl-8 focus:outline-none border border-[#232e3c]">
+                    <span class="absolute left-2.5 top-2 text-xs text-[#7f91a4]">🔍</span>
                 </div>
             </div>
-            <button onclick="closeInfoModal()" class="w-full bg-[#2a3942] hover:bg-[#374248] text-white py-2 rounded-xl text-sm transition">Close</button>
-        </div>
-    </div>
 
-    <!-- DELETE OPTIONS MODAL -->
-    <div id="delete-modal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center">
-        <div class="bg-[#202c33] border border-[#2a3942] p-6 rounded-2xl w-80 shadow-2xl text-center space-y-4">
-            <h3 class="font-bold text-white text-base">Delete Message?</h3>
-            <div class="space-y-2">
-                <button onclick="confirmDelete('me')" class="w-full bg-[#2a3942] hover:bg-[#374248] text-white py-2.5 rounded-xl font-medium transition text-sm">Delete for Me</button>
-                <button onclick="confirmDelete('everyone')" class="w-full bg-red-600/20 hover:bg-red-600/30 text-red-400 border border-red-500/30 py-2.5 rounded-xl font-medium transition text-sm">Delete for Everyone</button>
-                <button onclick="closeDeleteModal()" class="w-full text-[#8696a0] hover:text-white py-2 text-sm">Cancel</button>
+            <!-- Users / Chats List -->
+            <div id="users-list-container" class="flex-1 overflow-y-auto divide-y divide-[#232e3c]/40">
+                <!-- Dynamic user items will load here -->
+            </div>
+        </div>
+
+        <!-- RIGHT CHAT WINDOW -->
+        <div id="chat-window-area" class="hidden md:flex flex-1 flex-col bg-[#0e1621] h-full">
+            <!-- Placeholder before selecting a chat -->
+            <div id="no-chat-selected" class="flex-1 flex flex-col items-center justify-center p-6 text-center text-[#7f91a4]">
+                <div class="text-5xl mb-3">💬</div>
+                <p class="text-sm font-medium">Select a user from the sidebar to start direct messaging</p>
+            </div>
+
+            <!-- Active Chat Interface -->
+            <div id="active-chat-box" class="hidden flex-1 flex flex-col h-full">
+                <!-- Chat Header -->
+                <div class="bg-[#17212b] px-5 py-3 flex items-center justify-between border-b border-[#232e3c]">
+                    <div class="flex items-center gap-3">
+                        <div id="active-chat-avatar" class="w-9 h-9 rounded-full bg-[#2481cc] flex items-center justify-center font-bold text-white text-sm">?</div>
+                        <div>
+                            <h3 id="active-chat-name" class="font-bold text-white text-sm">Select Name</h3>
+                            <p id="active-chat-status" class="text-[11px] text-[#2481cc]">online</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Messages Stream -->
+                <div id="chat-messages-box" class="flex-1 p-4 overflow-y-auto space-y-3 bg-[radial-gradient(#17212b_1px,transparent_1px)] [background-size:20px_20px]">
+                    <!-- Dynamic chat messages -->
+                </div>
+
+                <!-- Chat Input Footer -->
+                <div class="bg-[#17212b] px-4 py-3 flex items-center gap-2 border-t border-[#232e3c]">
+                    <input type="text" id="chat-message-input" placeholder="Write a message..." onkeypress="handleChatKeyPress(event)" class="flex-1 bg-[#0e1621] text-white text-sm rounded-xl px-4 py-2.5 focus:outline-none border border-[#232e3c] placeholder-[#7f91a4]">
+                    <button onclick="sendDirectMessage()" class="bg-[#2481cc] hover:bg-[#1d6fa5] text-white p-2.5 rounded-xl transition cursor-pointer flex items-center justify-center shadow" title="Send">
+                        <svg viewBox="0 0 24 24" height="20" width="20" preserveAspectRatio="xMidYMid meet" version="1.1"><path fill="currentColor" d="M1.101,21.757L23.8,12.028L1.101,2.3l0.011,7.912l13.613,1.816L1.112,13.845 L1.101,21.757z"></path></svg>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -185,617 +162,266 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        let currentRoom = "";
-        let currentUser = "";
-        let typingTimeout = null;
-        let selectedMessageKey = null;
-        let isDarkMode = true;
+        let loggedInUser = null; // { username, name }
+        let activeChatUser = null; // Selected user object to chat with
+        let messagesListenerRef = null;
+        let allUsersCache = [];
 
-        let peerConnection;
-        let localStream;
-        let incomingCallData = null;
-        let isMuted = false;
-        let isCameraOff = false;
-        let useFrontCamera = true;
-        let currentCallType = 'video';
-        let isCallActiveLocally = false;
+        // Tab Switcher for Login / Register
+        function switchTab(tab) {
+            const loginForm = document.getElementById('login-form');
+            const registerForm = document.getElementById('register-form');
+            const loginBtn = document.getElementById('tab-login-btn');
+            const regBtn = document.getElementById('tab-register-btn');
 
-        // Reply state
-        let replyingTo = null; // Stores { key, sender, text }
-
-        const servers = {
-            iceServers: [{ urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] }]
-        };
-
-        const nameColors = {};
-        const colorPalette = ['#00a884', '#34b7f1', '#ffbc42', '#ff5722', '#ab47bc', '#26a69a', '#ec407a'];
-        function getColorForUser(name) {
-            if (!nameColors[name]) {
-                let hash = 0;
-                for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
-                nameColors[name] = colorPalette[Math.abs(hash) % colorPalette.length];
+            if (tab === 'login') {
+                loginForm.classList.remove('hidden');
+                registerForm.classList.add('hidden');
+                loginBtn.className = "flex-1 py-2 text-xs font-bold rounded-lg transition bg-[#2481cc] text-white cursor-pointer";
+                regBtn.className = "flex-1 py-2 text-xs font-bold rounded-lg transition text-[#7f91a4] cursor-pointer";
+            } else {
+                loginForm.classList.add('hidden');
+                registerForm.classList.remove('hidden');
+                regBtn.className = "flex-1 py-2 text-xs font-bold rounded-lg transition bg-[#2481cc] text-white cursor-pointer";
+                loginBtn.className = "flex-1 py-2 text-xs font-bold rounded-lg transition text-[#7f91a4] cursor-pointer";
             }
-            return nameColors[name];
         }
 
-        function sanitizeRoomName(room) {
-            return room.replace(/[.#$\/\[\]]/g, "_").toLowerCase();
-        }
-
+        // Auto Login check on Page Load via localStorage
         window.addEventListener('DOMContentLoaded', () => {
-            const savedRoom = localStorage.getItem('secret_chat_room');
-            const savedUser = localStorage.getItem('secret_chat_user');
-            const savedTheme = localStorage.getItem('secret_chat_theme');
-
-            if (savedTheme === 'light') toggleTheme(true);
-            if (savedRoom && savedUser) {
-                document.getElementById('room-input').value = savedRoom;
-                document.getElementById('name-input').value = savedUser;
-                joinRoom(true);
-            }
-
-            if (Notification && Notification.permission !== "granted") {
-                Notification.requestPermission();
+            const savedUser = localStorage.getItem('tg_secure_user');
+            if (savedUser) {
+                loggedInUser = JSON.parse(savedUser);
+                enterTelegramApp();
             }
         });
 
-        function toggleTheme(forcedLight = false) {
-            isDarkMode = forcedLight ? false : !isDarkMode;
-            const body = document.getElementById('body-theme');
-            const chatScreen = document.getElementById('chat-screen');
-            const chatHeader = document.getElementById('chat-header');
-            const chatFooter = document.getElementById('chat-footer');
-            const msgContainer = document.getElementById('messages-container');
-            const themeBtn = document.getElementById('theme-btn');
+        // Register Account
+        function handleRegister() {
+            const name = document.getElementById('reg-name').value.trim();
+            let username = document.getElementById('reg-username').value.trim().toLowerCase();
+            const password = document.getElementById('reg-password').value.trim();
 
-            if (isDarkMode) {
-                body.className = "bg-gradient-to-br from-[#0b141a] via-[#111b21] to-[#070d12] text-[#e9edef] h-screen flex flex-col justify-center items-center m-0 font-sans p-0 md:p-4 transition-colors duration-300";
-                chatScreen.className = "w-full max-w-4xl h-full md:h-[92vh] bg-[#111b21] md:rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-[#222d34] shadow-[0_0_40px_rgba(0,0,0,0.8)] transition-colors duration-300";
-                chatHeader.className = "bg-[#202c33] px-5 py-3 flex items-center justify-between border-b border-[#2a3942] transition-colors duration-300";
-                chatFooter.className = "bg-[#202c33] px-4 py-2.5 flex items-center gap-2 border-t border-[#2a3942] transition-colors duration-300";
-                msgContainer.className = "flex-1 p-5 overflow-y-auto space-y-4 bg-[#0b141a] transition-colors duration-300";
-                themeBtn.innerText = "☀️";
-                localStorage.setItem('secret_chat_theme', 'dark');
-            } else {
-                body.className = "bg-gradient-to-br from-[#f0f2f5] via-[#efeae2] to-[#d9dad7] text-[#111b21] h-screen flex flex-col justify-center items-center m-0 font-sans p-0 md:p-4 transition-colors duration-300";
-                chatScreen.className = "w-full max-w-4xl h-full md:h-[92vh] bg-white md:rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-gray-300 shadow-[0_0_40px_rgba(0,0,0,0.1)] transition-colors duration-300";
-                chatHeader.className = "bg-[#f0f2f5] px-5 py-3 flex items-center justify-between border-b border-gray-300 transition-colors duration-300";
-                chatFooter.className = "bg-[#f0f2f5] px-4 py-2.5 flex items-center gap-2 border-t border-gray-300 transition-colors duration-300";
-                msgContainer.className = "flex-1 p-5 overflow-y-auto space-y-4 bg-[#efeae2] transition-colors duration-300";
-                themeBtn.innerText = "🌙";
-                localStorage.setItem('secret_chat_theme', 'light');
-            }
-        }
-
-        function joinRoom(isAuto = false) {
-            const rawRoom = document.getElementById('room-input').value.trim();
-            const name = document.getElementById('name-input').value.trim();
-
-            if (!rawRoom || !name) {
-                if (!isAuto) alert("Please fill in both fields!");
+            if (!name || !username || !password) {
+                alert("Please fill in all registration fields!");
                 return;
             }
 
-            currentRoom = sanitizeRoomName(rawRoom);
-            currentUser = name;
+            // Sanitize username (alphanumeric & underscore only)
+            username = username.replace(/[^a-zA-Z0-9_]/g, "");
 
-            localStorage.setItem('secret_chat_room', rawRoom);
-            localStorage.setItem('secret_chat_user', name);
-
-            document.getElementById('login-screen').classList.add('hidden');
-            document.getElementById('chat-screen').classList.remove('hidden');
-            document.getElementById('room-title').innerText = "Room: " + rawRoom;
-
-            loadMessages();
-            listenForTyping();
-            listenForCalls();
-            updatePresence(true);
+            db.ref(`users/${username}`).once('value', (snapshot) => {
+                if (snapshot.exists()) {
+                    alert("Username already taken! Choose another one.");
+                } else {
+                    const userData = { name, username, password, online: true, lastSeen: Date.now() };
+                    db.ref(`users/${username}`).set(userData).then(() => {
+                        loggedInUser = userData;
+                        localStorage.setItem('tg_secure_user', JSON.stringify(userData));
+                        enterTelegramApp();
+                    });
+                }
+            });
         }
 
-        function updatePresence(isOnline) {
-            if (!currentRoom || !currentUser) return;
-            db.ref(`rooms/${currentRoom}/presence/${currentUser}`).set({
+        // Login Account
+        function handleLogin() {
+            let username = document.getElementById('login-username').value.trim().toLowerCase();
+            const password = document.getElementById('login-password').value.trim();
+
+            if (!username || !password) {
+                alert("Please enter username and password!");
+                return;
+            }
+
+            db.ref(`users/${username}`).once('value', (snapshot) => {
+                if (!snapshot.exists()) {
+                    alert("Username not found! Please register first.");
+                    return;
+                }
+                const userData = snapshot.val();
+                if (userData.password !== password) {
+                    alert("Incorrect password!");
+                    return;
+                }
+
+                loggedInUser = userData;
+                localStorage.setItem('tg_secure_user', JSON.stringify(userData));
+                enterTelegramApp();
+            });
+        }
+
+        function enterTelegramApp() {
+            document.getElementById('auth-screen').classList.add('hidden');
+            document.getElementById('telegram-screen').classList.remove('hidden');
+
+            document.getElementById('current-user-name').innerText = loggedInUser.name;
+            document.getElementById('current-user-handle').innerText = "@" + loggedInUser.username;
+            document.getElementById('user-avatar').innerText = loggedInUser.name.charAt(0).toUpperCase();
+
+            updateOnlineStatus(true);
+            loadUsersList();
+        }
+
+        function updateOnlineStatus(isOnline) {
+            if (!loggedInUser) return;
+            db.ref(`users/${loggedInUser.username}`).update({
                 online: isOnline,
                 lastSeen: Date.now()
             });
         }
 
         window.addEventListener('beforeunload', () => {
-            if (currentRoom && currentUser) {
-                db.ref(`rooms/${currentRoom}/typing/${currentUser}`).set(false);
-                db.ref(`rooms/${currentRoom}/presence/${currentUser}`).update({ online: false });
+            if (loggedInUser) {
+                db.ref(`users/${loggedInUser.username}`).update({ online: false, lastSeen: Date.now() });
             }
         });
 
-        function leaveRoom() {
-            updatePresence(false);
-            localStorage.removeItem('secret_chat_room');
-            localStorage.removeItem('secret_chat_user');
+        function logout() {
+            updateOnlineStatus(false);
+            localStorage.removeItem('tg_secure_user');
             location.reload();
         }
 
-        function handleKeyPress(e) {
-            if (e.key === 'Enter') sendMessage();
-        }
+        // Load Users List in Left Sidebar
+        function loadUsersList() {
+            const container = document.getElementById('users-list-container');
+            
+            db.ref('users').on('value', (snapshot) => {
+                container.innerHTML = "";
+                allUsersCache = [];
 
-        function updateTypingStatus() {
-            if (!currentRoom || !currentUser) return;
-            const typingRef = db.ref(`rooms/${currentRoom}/typing/${currentUser}`);
-            typingRef.set(true);
-            clearTimeout(typingTimeout);
-            typingTimeout = setTimeout(() => typingRef.set(false), 2000);
-        }
+                snapshot.forEach((childSnap) => {
+                    const user = childSnap.val();
+                    if (user.username !== loggedInUser.username) {
+                        allUsersCache.push(user);
+                    }
+                });
 
-        function listenForTyping() {
-            db.ref(`rooms/${currentRoom}/typing`).on('value', (snapshot) => {
-                const typingData = snapshot.val() || {};
-                let typingUsers = [];
-                for (let user in typingData) {
-                    if (user !== currentUser && typingData[user] === true) typingUsers.push(user);
-                }
-                const statusEl = document.getElementById('typing-status');
-                if (typingUsers.length > 0) {
-                    statusEl.innerText = typingUsers.join(', ') + " is typing...";
-                } else {
-                    statusEl.innerText = "🟢 Active in group";
-                }
+                renderUserListUI(allUsersCache);
             });
         }
 
-        function setReplyTo(key, sender, text) {
-            replyingTo = { key, sender, text };
-            document.getElementById('reply-preview-sender').innerText = `Replying to ${sender}`;
-            document.getElementById('reply-preview-text').innerText = text || "Attachment";
-            document.getElementById('reply-preview-container').classList.remove('hidden');
-            document.getElementById('message-input').focus();
+        function renderUserListUI(users) {
+            const container = document.getElementById('users-list-container');
+            container.innerHTML = "";
+
+            if (users.length === 0) {
+                container.innerHTML = `<p class="text-xs text-[#7f91a4] text-center p-4">No other users found.</p>`;
+                return;
+            }
+
+            users.forEach((user) => {
+                const isOnline = user.online;
+                const statusText = isOnline ? '<span class="text-[#2481cc]">online</span>' : '<span class="text-[#7f91a4]">offline</span>';
+                const initial = user.name.charAt(0).toUpperCase();
+
+                const userDiv = document.createElement('div');
+                userDiv.className = `flex items-center gap-3 p-3 cursor-pointer hover:bg-[#202b38] transition ${activeChatUser && activeChatUser.username === user.username ? 'bg-[#202b38]' : ''}`;
+                userDiv.onclick = () => selectChatUser(user);
+
+                userDiv.innerHTML = `
+                    <div class="relative">
+                        <div class="w-10 h-10 rounded-full bg-[#2481cc] flex items-center justify-center font-bold text-white text-sm shadow">${initial}</div>
+                        ${isOnline ? '<span class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-[#17212b] rounded-full"></span>' : ''}
+                    </div>
+                    <div class="flex-1 overflow-hidden">
+                        <div class="flex justify-between items-center">
+                            <h4 class="font-bold text-white text-sm truncate">${escapeHTML(user.name)}</h4>
+                        </div>
+                        <p class="text-xs text-[#7f91a4] truncate">@${escapeHTML(user.username)} &bull; ${statusText}</p>
+                    </div>
+                `;
+                container.appendChild(userDiv);
+            });
         }
 
-        function cancelReply() {
-            replyingTo = null;
-            document.getElementById('reply-preview-container').classList.add('hidden');
+        function filterUsers(query) {
+            const q = query.toLowerCase().trim();
+            const filtered = allUsersCache.filter(u => u.username.includes(q) || u.name.toLowerCase().includes(q));
+            renderUserListUI(filtered);
         }
 
-        function sendMessage() {
-            const input = document.getElementById('message-input');
+        // Select Chat User & Open Right Window
+        function selectChatUser(user) {
+            activeChatUser = user;
+
+            document.getElementById('no-chat-selected').classList.add('hidden');
+            document.getElementById('active-chat-box').classList.remove('hidden');
+
+            document.getElementById('active-chat-name').innerText = user.name;
+            document.getElementById('active-chat-avatar').innerText = user.name.charAt(0).toUpperCase();
+            document.getElementById('active-chat-status').innerText = user.online ? 'online' : 'offline';
+
+            // Highlight in sidebar
+            loadUsersList();
+
+            // Load Private Chat Messages
+            loadDirectMessages();
+        }
+
+        // Generate Unique Chat Room ID between two users (alphabetically sorted)
+        function getChatRoomId(user1, user2) {
+            return user1 < user2 ? `${user1}_${user2}` : `${user2}_${user1}`;
+        }
+
+        function loadDirectMessages() {
+            const msgBox = document.getElementById('chat-messages-box');
+            msgBox.innerHTML = "";
+
+            if (messagesListenerRef) {
+                messagesListenerRef.off();
+            }
+
+            const chatId = getChatRoomId(loggedInUser.username, activeChatUser.username);
+            messagesListenerRef = db.ref(`chats/${chatId}/messages`);
+
+            messagesListenerRef.limitToLast(50).on('child_added', (snapshot) => {
+                const msg = snapshot.val();
+                renderChatMessage(msg);
+            });
+        }
+
+        function renderChatMessage(msg) {
+            const msgBox = document.getElementById('chat-messages-box');
+            const isMe = msg.sender === loggedInUser.username;
+
+            const div = document.createElement('div');
+            div.className = `flex ${isMe ? 'justify-end' : 'justify-start'} anim-fade my-1`;
+
+            div.innerHTML = `
+                <div class="max-w-[70%] rounded-2xl px-4 py-2 shadow-md ${isMe ? 'bg-[#2b5278] text-white rounded-tr-none' : 'bg-[#182533] text-white rounded-tl-none'}">
+                    <p class="break-words text-sm leading-relaxed">${escapeHTML(msg.text)}</p>
+                    <div class="text-[10px] text-[#7f91a4] text-right mt-1 font-medium">${msg.time}</div>
+                </div>
+            `;
+            msgBox.appendChild(div);
+            msgBox.scrollTop = msgBox.scrollHeight;
+        }
+
+        function handleChatKeyPress(e) {
+            if (e.key === 'Enter') {
+                sendDirectMessage();
+            }
+        }
+
+        function sendDirectMessage() {
+            const input = document.getElementById('chat-message-input');
             const text = input.value.trim();
-            if (!text && !window.pendingFile) return;
+            if (!text || !activeChatUser) return;
 
-            db.ref(`rooms/${currentRoom}/typing/${currentUser}`).set(false);
+            const chatId = getChatRoomId(loggedInUser.username, activeChatUser.username);
             const timeString = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-            const messageData = {
-                sender: currentUser,
+            const msgData = {
+                sender: loggedInUser.username,
                 text: text,
-                type: 'text',
                 time: timeString,
-                deliveredTo: { [currentUser]: true },
-                readBy: { [currentUser]: true },
-                replyTo: replyingTo ? { sender: replyingTo.sender, text: replyingTo.text } : null,
                 timestamp: Date.now()
             };
 
-            const newMsgRef = db.ref(`rooms/${currentRoom}/messages`).push();
-            newMsgRef.set(messageData);
-
-            // Register delivery/read for other currently active members in the room
-            db.ref(`rooms/${currentRoom}/presence`).once('value', (snap) => {
-                snap.forEach((userSnap) => {
-                    const member = userSnap.key;
-                    if (member !== currentUser) {
-                        db.ref(`rooms/${currentRoom}/messages/${newMsgRef.key}/deliveredTo/${member}`).set(true);
-                        db.ref(`rooms/${currentRoom}/messages/${newMsgRef.key}/readBy/${member}`).set(true);
-                    }
-                });
-            });
-
+            db.ref(`chats/${chatId}/messages`).push(msgData);
             input.value = "";
-            cancelReply();
-        }
-
-        function handleFileSelect(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            if (file.size > 1500000) {
-                alert("File size under 1.5MB allowed!");
-                event.target.value = "";
-                return;
-            }
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const messageData = {
-                    sender: currentUser,
-                    fileName: file.name,
-                    fileData: e.target.result,
-                    fileType: file.type,
-                    type: file.type.startsWith('image/') ? 'image' : 'file',
-                    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                    deliveredTo: { [currentUser]: true },
-                    readBy: { [currentUser]: true },
-                    replyTo: replyingTo ? { sender: replyingTo.sender, text: replyingTo.text } : null,
-                    timestamp: Date.now()
-                };
-                
-                const newMsgRef = db.ref(`rooms/${currentRoom}/messages`).push();
-                newMsgRef.set(messageData);
-
-                db.ref(`rooms/${currentRoom}/presence`).once('value', (snap) => {
-                    snap.forEach((userSnap) => {
-                        const member = userSnap.key;
-                        if (member !== currentUser) {
-                            db.ref(`rooms/${currentRoom}/messages/${newMsgRef.key}/deliveredTo/${member}`).set(true);
-                            db.ref(`rooms/${currentRoom}/messages/${newMsgRef.key}/readBy/${member}`).set(true);
-                        }
-                    });
-                });
-
-                event.target.value = "";
-                cancelReply();
-            };
-            reader.readAsDataURL(file);
-        }
-
-        function loadMessages() {
-            const container = document.getElementById('messages-container');
-            container.innerHTML = "";
-
-            db.ref(`rooms/${currentRoom}/messages`).limitToLast(50).on('child_added', (snapshot) => {
-                const msg = snapshot.val();
-                renderSingleMessage(snapshot.key, msg);
-
-                // Auto mark as delivered and read for current active user when message loads
-                if (msg.sender !== currentUser) {
-                    db.ref(`rooms/${currentRoom}/messages/${snapshot.key}/deliveredTo/${currentUser}`).set(true);
-                    db.ref(`rooms/${currentRoom}/messages/${snapshot.key}/readBy/${currentUser}`).set(true);
-                }
-
-                if (msg.sender !== currentUser && document.hidden && Notification.permission === "granted") {
-                    new Notification(`New message from ${msg.sender}`, {
-                        body: msg.text || "Sent an attachment",
-                        icon: "https://cdn-icons-png.flaticon.com/512/733/733585.png"
-                    });
-                }
-            });
-
-            db.ref(`rooms/${currentRoom}/messages`).on('child_changed', (snapshot) => {
-                const existingEl = document.getElementById(`msg-${snapshot.key}`);
-                if (existingEl && snapshot.val().deletedForEveryone) {
-                    existingEl.innerHTML = `<p class="italic text-[#8696a0] text-xs">🔒 This message was deleted</p>`;
-                }
-            });
-
-            db.ref(`rooms/${currentRoom}/messages`).on('child_removed', (snapshot) => {
-                const existingEl = document.getElementById(`msg-${snapshot.key}`);
-                if (existingEl) existingEl.remove();
-            });
-        }
-
-        function renderSingleMessage(key, msg) {
-            const container = document.getElementById('messages-container');
-            const isMe = msg.sender === currentUser;
-            const userColor = getColorForUser(msg.sender);
-
-            if (msg.deletedForMe && msg.deletedForMe[currentUser]) return;
-
-            const messageDiv = document.createElement('div');
-            messageDiv.id = `msg-${key}`;
-            messageDiv.className = `flex ${isMe ? 'justify-end' : 'justify-start'} message-anim relative msg-container my-1`;
-
-            let replyHTML = '';
-            if (msg.replyTo) {
-                replyHTML = `
-                    <div class="bg-black/20 border-l-2 border-[#00a884] px-2 py-1 mb-1 rounded text-xs">
-                        <p class="font-bold text-[#00a884]">${escapeHTML(msg.replyTo.sender)}</p>
-                        <p class="text-[#8696a0] truncate">${escapeHTML(msg.replyTo.text)}</p>
-                    </div>
-                `;
-            }
-
-            let contentHTML = '';
-            if (msg.deletedForEveryone) {
-                contentHTML = `<p class="italic text-[#8696a0] text-xs">🔒 This message was deleted</p>`;
-            } else if (msg.type === 'image') {
-                contentHTML = `
-                    ${replyHTML}
-                    <a href="${msg.fileData}" target="_blank" class="block mb-1">
-                        <img src="${msg.fileData}" class="max-w-xs rounded-xl max-h-60 object-cover border border-white/10 shadow-md">
-                    </a>
-                    <p class="text-[10px] text-[#8696a0] truncate max-w-xs">${escapeHTML(msg.fileName || '')}</p>
-                `;
-            } else if (msg.type === 'file') {
-                contentHTML = `
-                    ${replyHTML}
-                    <div class="flex items-center gap-3 mb-1 bg-[#111b21]/80 p-2.5 rounded-xl border border-[#374248]">
-                        <span class="text-2xl">📄</span>
-                        <div class="overflow-hidden">
-                            <p class="text-xs font-bold truncate max-w-[170px] text-white">${escapeHTML(msg.fileName || 'Document')}</p>
-                            <a href="${msg.fileData}" download="${msg.fileName || 'file'}" class="text-[11px] text-[#00a884] font-semibold hover:underline">Download 📥</a>
-                        </div>
-                    </div>
-                `;
-            } else {
-                contentHTML = `
-                    ${replyHTML}
-                    <p class="break-words pb-1 text-sm md:text-base leading-relaxed">${escapeHTML(msg.text || '')}</p>
-                `;
-            }
-
-            // Sleek Dynamic Action Buttons (Info + Reply + Delete)
-            let actionButtons = '';
-            if (!msg.deletedForEveryone) {
-                const infoBtn = isMe ? `<button onclick="openMessageInfo('${key}')" class="bg-[#202c33] hover:bg-[#2a3942] text-[#8696a0] hover:text-[#00a884] p-1 rounded text-xs shadow border border-[#2a3942]" title="Info">ℹ️</button>` : '';
-                const replyBtn = `<button onclick="setReplyTo('${key}', '${msg.sender}', '${escapeHTML(msg.text || msg.fileName || 'Attachment')}')" class="bg-[#202c33] hover:bg-[#2a3942] text-[#8696a0] hover:text-white p-1 rounded text-xs shadow border border-[#2a3942]" title="Reply">↩️</button>`;
-                const deleteBtn = isMe ? `<button onclick="openDeleteModal('${key}')" class="bg-[#202c33] hover:bg-[#2a3942] text-[#8696a0] hover:text-red-400 p-1 rounded text-xs shadow border border-[#2a3942]" title="Delete">🗑️</button>` : '';
-
-                actionButtons = `
-                    <div class="msg-actions opacity-0 transition absolute -top-3.5 ${isMe ? 'left-1' : 'right-1'} flex items-center gap-1 z-10 bg-[#111b21] px-1.5 py-0.5 rounded-full shadow border border-[#2a3942]">
-                        ${infoBtn}
-                        ${replyBtn}
-                        ${deleteBtn}
-                    </div>
-                `;
-            }
-
-            const bubbleColor = isMe ? 'bg-[#005c4b] text-white' : (isDarkMode ? 'bg-[#202c33] text-white' : 'bg-white text-gray-900 border border-gray-200');
-
-            messageDiv.innerHTML = `
-                <div class="relative max-w-[75%] md:max-w-[65%] rounded-2xl px-4 py-2 shadow-lg ${bubbleColor} ${isMe ? 'rounded-tr-none' : 'rounded-tl-none'}">
-                    ${actionButtons}
-                    ${!isMe ? `<p class="text-xs font-bold mb-1" style="color: ${userColor};">${msg.sender}</p>` : ''}
-                    ${contentHTML}
-                    <div class="text-[10px] text-[#8696a0] text-right mt-1 font-medium flex items-center justify-end gap-1">
-                        <span>${msg.time || ''}</span>
-                        ${isMe ? '<span class="text-[#34b7f1] font-bold">✓✓</span>' : ''}
-                    </div>
-                </div>
-            `;
-
-            container.appendChild(messageDiv);
-            container.scrollTop = container.scrollHeight;
-        }
-
-        // Fixed Message Info Implementation
-        function openMessageInfo(msgKey) {
-            db.ref(`rooms/${currentRoom}/messages/${msgKey}`).once('value', (snapshot) => {
-                const msg = snapshot.val();
-                if (!msg) return;
-
-                const readByList = document.getElementById('read-by-list');
-                const deliveredToList = document.getElementById('delivered-to-list');
-                readByList.innerHTML = '';
-                deliveredToList.innerHTML = '';
-
-                const readBy = msg.readBy || {};
-                const deliveredTo = msg.deliveredTo || {};
-
-                for (let user in readBy) {
-                    readByList.innerHTML += `<div class="flex items-center justify-between bg-[#111b21] px-3 py-1.5 rounded-lg border border-[#2a3942]"><span>${user}</span> <span class="text-xs text-[#00a884]">Read ✓✓</span></div>`;
-                }
-
-                for (let user in deliveredTo) {
-                    if (!readBy[user]) {
-                        deliveredToList.innerHTML += `<div class="flex items-center justify-between bg-[#111b21] px-3 py-1.5 rounded-lg border border-[#2a3942]"><span>${user}</span> <span class="text-xs text-[#8696a0]">Delivered ✓</span></div>`;
-                    }
-                }
-
-                if (readByList.innerHTML === '') readByList.innerHTML = '<p class="text-xs text-[#8696a0]">No read receipts yet</p>';
-                if (deliveredToList.innerHTML === '') deliveredToList.innerHTML = '<p class="text-xs text-[#8696a0]">All members read</p>';
-
-                document.getElementById('info-modal').classList.remove('hidden');
-            });
-        }
-
-        function closeInfoModal() { document.getElementById('info-modal').classList.add('hidden'); }
-        function openDeleteModal(msgKey) { selectedMessageKey = msgKey; document.getElementById('delete-modal').classList.remove('hidden'); }
-        function closeDeleteModal() { selectedMessageKey = null; document.getElementById('delete-modal').classList.add('hidden'); }
-        
-        function confirmDelete(type) {
-            if (!selectedMessageKey) return;
-            if (type === 'me') {
-                db.ref(`rooms/${currentRoom}/messages/${selectedMessageKey}/deletedForMe/${currentUser}`).set(true);
-                document.getElementById(`msg-${selectedMessageKey}`)?.remove();
-            } else if (type === 'everyone') {
-                db.ref(`rooms/${currentRoom}/messages/${selectedMessageKey}`).update({ deletedForEveryone: true, text: "", fileData: "", fileName: "" });
-            }
-            closeDeleteModal();
-        }
-
-        async function startCall(type) {
-            currentCallType = type;
-            isCallActiveLocally = true;
-            document.getElementById('call-modal').classList.remove('hidden');
-            document.getElementById('call-status-text').innerText = "Starting Call...";
-
-            try {
-                const constraints = {
-                    video: type === 'video' ? { facingMode: useFrontCamera ? 'user' : 'environment' } : false,
-                    audio: true
-                };
-                localStream = await navigator.mediaDevices.getUserMedia(constraints);
-                document.getElementById('local-video').srcObject = localStream;
-
-                peerConnection = new RTCPeerConnection(servers);
-                localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
-
-                peerConnection.ontrack = event => {
-                    document.getElementById('remote-video').srcObject = event.streams[0];
-                };
-
-                peerConnection.onicecandidate = event => {
-                    if (event.candidate) {
-                        db.ref(`rooms/${currentRoom}/call/candidates`).push(event.candidate.toJSON());
-                    }
-                };
-
-                const offer = await peerConnection.createOffer();
-                await peerConnection.setLocalDescription(offer);
-
-                db.ref(`rooms/${currentRoom}/call`).set({
-                    type: type,
-                    caller: currentUser,
-                    status: 'calling',
-                    offer: { type: offer.type, sdp: offer.sdp }
-                });
-                document.getElementById('call-status-text').innerText = "Calling Participants...";
-            } catch (err) {
-                alert("Camera/Mic permission denied or unavailable.");
-                endCall();
-            }
-        }
-
-        function listenForCalls() {
-            db.ref(`rooms/${currentRoom}/call`).on('value', async snapshot => {
-                const data = snapshot.val();
-                if (!data || data.status === 'ended') {
-                    forceCloseCallUI();
-                    return;
-                }
-
-                if (data.caller !== currentUser && !peerConnection && !isCallActiveLocally) {
-                    incomingCallData = data;
-                    document.getElementById('incoming-caller-text').innerText = `${data.caller} is calling (${data.type})...`;
-                    document.getElementById('incoming-call-modal').classList.remove('hidden');
-                }
-            });
-
-            db.ref(`rooms/${currentRoom}/call/answer`).on('value', async snapshot => {
-                const answer = snapshot.val();
-                if (answer && peerConnection && !peerConnection.currentRemoteDescription) {
-                    await peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
-                    document.getElementById('call-status-text').innerText = "Call Connected 🟢";
-                }
-            });
-
-            db.ref(`rooms/${currentRoom}/call/candidates`).on('child_added', async snapshot => {
-                const candidate = snapshot.val();
-                if (peerConnection && candidate) {
-                    try { await peerConnection.addIceCandidate(new RTCIceCandidate(candidate)); } catch(e){}
-                }
-            });
-        }
-
-        async function acceptCall() {
-            document.getElementById('incoming-call-modal').classList.add('hidden');
-            document.getElementById('call-modal').classList.remove('hidden');
-            document.getElementById('call-status-text').innerText = "Connecting Call...";
-            isCallActiveLocally = true;
-            currentCallType = incomingCallData.type;
-
-            try {
-                const constraints = {
-                    video: currentCallType === 'video' ? { facingMode: useFrontCamera ? 'user' : 'environment' } : false,
-                    audio: true
-                };
-                localStream = await navigator.mediaDevices.getUserMedia(constraints);
-                document.getElementById('local-video').srcObject = localStream;
-
-                peerConnection = new RTCPeerConnection(servers);
-                localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
-
-                peerConnection.ontrack = event => {
-                    document.getElementById('remote-video').srcObject = event.streams[0];
-                };
-
-                peerConnection.onicecandidate = event => {
-                    if (event.candidate) {
-                        db.ref(`rooms/${currentRoom}/call/candidates`).push(event.candidate.toJSON());
-                    }
-                };
-
-                await peerConnection.setRemoteDescription(new RTCSessionDescription(incomingCallData.offer));
-                const answer = await peerConnection.createAnswer();
-                await peerConnection.setLocalDescription(answer);
-
-                db.ref(`rooms/${currentRoom}/call/answer`).set({ type: answer.type, sdp: answer.sdp });
-                db.ref(`rooms/${currentRoom}/call/status`).set('connected');
-                document.getElementById('call-status-text').innerText = "Call Connected 🟢";
-            } catch (err) {
-                alert("Could not access camera/mic.");
-                endCall();
-            }
-        }
-
-        function rejectCall() {
-            document.getElementById('incoming-call-modal').classList.add('hidden');
-            db.ref(`rooms/${currentRoom}/call`).update({ status: 'ended' });
-            setTimeout(() => db.ref(`rooms/${currentRoom}/call`).remove(), 500);
-        }
-
-        function endCall() {
-            db.ref(`rooms/${currentRoom}/call`).update({ status: 'ended' });
-            setTimeout(() => db.ref(`rooms/${currentRoom}/call`).remove(), 500);
-            forceCloseCallUI();
-        }
-
-        function forceCloseCallUI() {
-            if (localStream) {
-                localStream.getTracks().forEach(t => t.stop());
-                localStream = null;
-            }
-            if (peerConnection) {
-                peerConnection.close();
-                peerConnection = null;
-            }
-            isMuted = false;
-            isCameraOff = false;
-            isCallActiveLocally = false;
-            
-            const muteBtn = document.getElementById('mute-btn');
-            const camBtn = document.getElementById('cam-btn');
-            if (muteBtn) muteBtn.innerText = "🎙️ Mute";
-            if (camBtn) camBtn.innerText = "📹 Stop Cam";
-            
-            document.getElementById('call-modal').classList.add('hidden');
-            document.getElementById('incoming-call-modal').classList.add('hidden');
-        }
-
-        function toggleMute() {
-            if (!localStream) return;
-            const audioTrack = localStream.getAudioTracks()[0];
-            if (audioTrack) {
-                isMuted = !isMuted;
-                audioTrack.enabled = !isMuted;
-                document.getElementById('mute-btn').innerText = isMuted ? "🎙️ Unmute" : "🎙️ Mute";
-            }
-        }
-
-        function toggleCamera() {
-            if (!localStream) return;
-            const videoTrack = localStream.getVideoTracks()[0];
-            if (videoTrack) {
-                isCameraOff = !isCameraOff;
-                videoTrack.enabled = !isCameraOff;
-                document.getElementById('cam-btn').innerText = isCameraOff ? "📹 Start Cam" : "📹 Stop Cam";
-            } else {
-                alert("This is an audio-only call session!");
-            }
-        }
-
-        async function switchCamera() {
-            if (currentCallType !== 'video') {
-                alert("Switch camera is only available in video calls!");
-                return;
-            }
-            useFrontCamera = !useFrontCamera;
-            if (localStream) {
-                localStream.getTracks().forEach(track => track.stop());
-            }
-            try {
-                const constraints = {
-                    video: { facingMode: useFrontCamera ? 'user' : 'environment' },
-                    audio: true
-                };
-                localStream = await navigator.mediaDevices.getUserMedia(constraints);
-                document.getElementById('local-video').srcObject = localStream;
-
-                if (peerConnection) {
-                    const videoTrack = localStream.getVideoTracks()[0];
-                    const sender = peerConnection.getSenders().find(s => s.track && s.track.kind === 'video');
-                    if (sender) sender.replaceTrack(videoTrack);
-                }
-            } catch (err) {
-                alert("Error switching camera: " + err.message);
-            }
         }
 
         function escapeHTML(str) {
