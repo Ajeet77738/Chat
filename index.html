@@ -21,46 +21,37 @@
             width: 5px;
         }
         ::-webkit-scrollbar-track {
-            background: #0e1621;
+            background: var(--sb-track, #0e1621);
         }
         ::-webkit-scrollbar-thumb {
-            background: #232e3c;
+            background: var(--sb-thumb, #232e3c);
             border-radius: 3px;
         }
     </style>
 </head>
-<body class="bg-[#0f172a] text-[#e2e8f0] h-screen flex flex-col justify-center items-center m-0 font-sans p-0 md:p-4 overflow-hidden">
+<body id="body-theme" class="bg-[#0f172a] text-[#e2e8f0] h-screen flex flex-col justify-center items-center m-0 font-sans p-0 md:p-4 overflow-hidden transition-colors duration-300">
 
-    <!-- AUTH CONTAINER (Register / Login) -->
+    <!-- TOAST POPUP NOTIFICATION -->
+    <div id="toast-popup" class="hidden fixed top-5 z-50 bg-[#2481cc] text-white px-6 py-3 rounded-xl shadow-2xl font-bold text-sm anim-fade transition-all">
+        Success Notification
+    </div>
+
+    <!-- AUTH CONTAINER (Default Register View) -->
     <div id="auth-screen" class="w-full max-w-md bg-[#17212b] p-8 rounded-2xl shadow-2xl border border-[#232e3c] space-y-6">
         <div class="text-center">
             <div class="inline-block p-3 rounded-full bg-[#2481cc]/20 text-[#2481cc] text-3xl mb-2 shadow">✈️</div>
             <h1 id="auth-title" class="text-2xl font-black text-white tracking-wide">Telegram Secure</h1>
-            <p id="auth-subtitle" class="text-xs text-[#7f91a4] mt-1">Connect with anyone using unique username</p>
+            <p id="auth-subtitle" class="text-xs text-[#7f91a4] mt-1">Create your account to start chatting</p>
         </div>
 
-        <!-- Forms Tabs Switcher -->
+        <!-- Forms Tabs Switcher (Default to Register) -->
         <div class="flex bg-[#0e1621] p-1 rounded-xl border border-[#232e3c]">
-            <button onclick="switchTab('login')" id="tab-login-btn" class="flex-1 py-2 text-xs font-bold rounded-lg transition bg-[#2481cc] text-white cursor-pointer">Login</button>
-            <button onclick="switchTab('register')" id="tab-register-btn" class="flex-1 py-2 text-xs font-bold rounded-lg transition text-[#7f91a4] cursor-pointer">Register</button>
+            <button onclick="switchTab('register')" id="tab-register-btn" class="flex-1 py-2 text-xs font-bold rounded-lg transition bg-[#2481cc] text-white cursor-pointer">Register</button>
+            <button onclick="switchTab('login')" id="tab-login-btn" class="flex-1 py-2 text-xs font-bold rounded-lg transition text-[#7f91a4] cursor-pointer">Login</button>
         </div>
 
-        <!-- LOGIN FORM -->
-        <div id="login-form" class="space-y-4">
-            <div>
-                <label class="block text-[11px] font-bold uppercase tracking-wider text-[#7f91a4] mb-1">Unique Username</label>
-                <input type="text" id="login-username" placeholder="e.g. alex_99" class="w-full bg-[#0e1621] border border-[#232e3c] rounded-xl p-3 text-white focus:outline-none focus:border-[#2481cc] transition">
-            </div>
-            <div>
-                <label class="block text-[11px] font-bold uppercase tracking-wider text-[#7f91a4] mb-1">Password</label>
-                <input type="password" id="login-password" placeholder="••••••••" class="w-full bg-[#0e1621] border border-[#232e3c] rounded-xl p-3 text-white focus:outline-none focus:border-[#2481cc] transition">
-            </div>
-            <button onclick="handleLogin()" class="w-full bg-[#2481cc] hover:bg-[#1d6fa5] text-white font-bold py-3 rounded-xl transition cursor-pointer shadow-lg">Sign In</button>
-        </div>
-
-        <!-- REGISTER FORM -->
-        <div id="register-form" class="space-y-4 hidden">
-            <!-- Instructions Box -->
+        <!-- REGISTER FORM (Default Open) -->
+        <div id="register-form" class="space-y-4">
             <div class="bg-[#0e1621] border border-[#2481cc]/30 p-3 rounded-xl text-xs text-[#7f91a4] space-y-1">
                 <p class="font-bold text-[#2481cc]">📌 Registration Guidelines:</p>
                 <p>• Choose a unique username (no spaces).</p>
@@ -80,44 +71,66 @@
             </div>
             <button onclick="handleRegister()" class="w-full bg-[#2481cc] hover:bg-[#1d6fa5] text-white font-bold py-3 rounded-xl transition cursor-pointer shadow-lg">Create Account</button>
         </div>
-    </div>
 
-    <!-- TELEGRAM MAIN CHAT INTERFACE (2-Column Layout) -->
-    <div id="telegram-screen" class="hidden w-full max-w-5xl h-full md:h-[94vh] bg-[#17212b] md:rounded-2xl shadow-2xl flex overflow-hidden border border-[#232e3c]">
+        <!-- LOGIN FORM (Hidden by default) -->
+        <div id="login-form" class="space-y-4 hidden">
+            <div>
+                <label class="block text-[11px] font-bold uppercase tracking-wider text-[#7f91a4] mb-1">Unique Username</label>
+                <input type="text" id="login-username" placeholder="e.g. alex_99" class="w-full bg-[#0e1621] border border-[#232e3c] rounded-xl p-3 text-white focus:outline-none focus:border-[#2481cc] transition">
+            </div>
+            <div>
+                <label class="block text-[11px] font-bold uppercase tracking-wider text-[#7f91a4] mb-1">Password</label>
+                <input type="password" id="login-password" placeholder="••••••••" class="w-full bg-[#0e1621] border border-[#232e3c] rounded-xl p-3 text-white focus:outline-none focus:border-[#2481cc] transition">
+            </div>
+            <button onclick="handleLogin()" class="w-full bg-[#2481cc] hover:bg-[#1d6fa5] text-white font-bold py-3 rounded-xl transition cursor-pointer shadow-lg">Sign In</button>
+        </div>
+    </div>
+        <!-- TELEGRAM MAIN CHAT INTERFACE (2-Column Layout) -->
+    <div id="telegram-screen" class="hidden w-full max-w-5xl h-full md:h-[94vh] bg-[#17212b] md:rounded-2xl shadow-2xl flex overflow-hidden border border-[#232e3c] relative">
         
+        <!-- SIDEBAR DRAWER MENU (Telegram Style Hamburger Menu) -->
+        <div id="sidebar-drawer" class="absolute inset-y-0 left-0 w-72 bg-[#17212b] border-r border-[#232e3c] z-30 transform -translate-x-full transition-transform duration-300 flex flex-col shadow-2xl">
+            <div class="bg-[#2481cc] p-6 text-white space-y-3">
+                <div id="drawer-avatar" class="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center font-bold text-xl shadow">A</div>
+                <div>
+                    <h3 id="drawer-name" class="font-bold text-base">User Name</h3>
+                    <p id="drawer-handle" class="text-xs text-white/80">@handle</p>
+                </div>
+            </div>
+            <div class="flex-1 p-3 space-y-1 text-sm">
+                <button onclick="openProfileModal()" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-[#202b38] transition text-left cursor-pointer">👤 My Profile</button>
+                <button onclick="toggleTheme()" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-[#202b38] transition text-left cursor-pointer"><span id="theme-icon">🌙</span> <span id="theme-text">Dark Mode</span></button>
+                <hr class="border-[#232e3c] my-2">
+                <button onclick="logout()" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-red-500/10 text-red-400 transition text-left cursor-pointer">🚪 Logout</button>
+            </div>
+        </div>
+        <!-- Drawer Backdrop -->
+        <div id="drawer-backdrop" onclick="toggleDrawer()" class="hidden fixed inset-0 bg-black/50 z-20"></div>
+
         <!-- LEFT SIDEBAR -->
         <div class="w-full md:w-80 bg-[#17212b] border-r border-[#232e3c] flex flex-col h-full">
-            <!-- Sidebar Header with Search -->
-            <div class="p-3 bg-[#17212b] border-b border-[#232e3c] flex flex-col gap-2">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-2">
-                        <div id="user-avatar" class="w-9 h-9 rounded-full bg-[#2481cc] flex items-center justify-center font-bold text-white text-sm shadow">A</div>
-                        <div>
-                            <h3 id="current-user-name" class="font-bold text-white text-sm">User</h3>
-                            <p class="text-[10px] text-[#7f91a4]" id="current-user-handle">@handle</p>
-                        </div>
+            <!-- Sidebar Header with Hamburger & Search -->
+            <div class="p-3 bg-[#17212b] border-b border-[#232e3c] flex flex-col gap-3">
+                <div class="flex items-center gap-3">
+                    <button onclick="toggleDrawer()" class="text-white text-xl p-1.5 hover:bg-[#202b38] rounded-xl transition cursor-pointer" title="Menu">☰</button>
+                    <div class="flex-1 relative">
+                        <input type="text" id="search-user-input" oninput="searchUsers(this.value)" placeholder="Search username (e.g. alex)..." class="w-full bg-[#0e1621] text-xs text-white rounded-xl py-2 px-3 pl-8 focus:outline-none border border-[#232e3c]">
+                        <span class="absolute left-2.5 top-2 text-xs text-[#7f91a4]">🔍</span>
                     </div>
-                    <button onclick="logout()" class="text-xs text-[#7f91a4] hover:text-red-400 p-2 transition cursor-pointer" title="Logout">🚪</button>
-                </div>
-                <!-- Search Bar -->
-                <div class="relative mt-1">
-                    <input type="text" id="search-user-input" oninput="filterUsers(this.value)" placeholder="Search users by username..." class="w-full bg-[#0e1621] text-xs text-white rounded-xl py-2 px-3 pl-8 focus:outline-none border border-[#232e3c]">
-                    <span class="absolute left-2.5 top-2 text-xs text-[#7f91a4]">🔍</span>
                 </div>
             </div>
 
-            <!-- Users / Chats List -->
-            <div id="users-list-container" class="flex-1 overflow-y-auto divide-y divide-[#232e3c]/40">
-                <!-- Dynamic user items will load here -->
+            <!-- Search Results / Direct Chats List -->
+            <div id="search-results-container" class="flex-1 overflow-y-auto divide-y divide-[#232e3c]/40 p-2">
+                <p class="text-xs text-[#7f91a4] text-center p-4">Type a username above to search and chat.</p>
             </div>
         </div>
 
         <!-- RIGHT CHAT WINDOW -->
         <div id="chat-window-area" class="hidden md:flex flex-1 flex-col bg-[#0e1621] h-full">
-            <!-- Placeholder before selecting a chat -->
             <div id="no-chat-selected" class="flex-1 flex flex-col items-center justify-center p-6 text-center text-[#7f91a4]">
                 <div class="text-5xl mb-3">💬</div>
-                <p class="text-sm font-medium">Select a user from the sidebar to start direct messaging</p>
+                <p class="text-sm font-medium">Search for a username in the sidebar to start direct messaging</p>
             </div>
 
             <!-- Active Chat Interface -->
@@ -125,7 +138,7 @@
                 <!-- Chat Header -->
                 <div class="bg-[#17212b] px-5 py-3 flex items-center justify-between border-b border-[#232e3c]">
                     <div class="flex items-center gap-3">
-                        <div id="active-chat-avatar" class="w-9 h-9 rounded-full bg-[#2481cc] flex items-center justify-center font-bold text-white text-sm">?</div>
+                        <div id="active-chat-avatar" class="w-9 h-9 rounded-full bg-[#2481cc] flex items-center justify-center font-bold text-white text-sm overflow-hidden">?</div>
                         <div>
                             <h3 id="active-chat-name" class="font-bold text-white text-sm">Select Name</h3>
                             <p id="active-chat-status" class="text-[11px] text-[#2481cc]">online</p>
@@ -134,9 +147,7 @@
                 </div>
 
                 <!-- Messages Stream -->
-                <div id="chat-messages-box" class="flex-1 p-4 overflow-y-auto space-y-3 bg-[radial-gradient(#17212b_1px,transparent_1px)] [background-size:20px_20px]">
-                    <!-- Dynamic chat messages -->
-                </div>
+                <div id="chat-messages-box" class="flex-1 p-4 overflow-y-auto space-y-3 bg-[radial-gradient(#17212b_1px,transparent_1px)] [background-size:20px_20px]"></div>
 
                 <!-- Chat Input Footer -->
                 <div class="bg-[#17212b] px-4 py-3 flex items-center gap-2 border-t border-[#232e3c]">
@@ -148,6 +159,28 @@
             </div>
         </div>
     </div>
+
+    <!-- MY PROFILE MODAL -->
+    <div id="profile-modal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-[#17212b] border border-[#232e3c] p-6 rounded-2xl w-full max-w-sm shadow-2xl space-y-4">
+            <div class="flex justify-between items-center border-b border-[#232e3c] pb-3">
+                <h3 class="font-bold text-white text-base">Edit Profile</h3>
+                <button onclick="closeProfileModal()" class="text-[#7f91a4] hover:text-white text-lg font-bold">&times;</button>
+            </div>
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-[11px] font-bold uppercase tracking-wider text-[#7f91a4] mb-1">Full Name</label>
+                    <input type="text" id="edit-profile-name" class="w-full bg-[#0e1621] border border-[#232e3c] rounded-xl p-3 text-white text-sm focus:outline-none focus:border-[#2481cc]">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold uppercase tracking-wider text-[#7f91a4] mb-1">Profile Pic URL (Image link)</label>
+                    <input type="text" id="edit-profile-pic" placeholder="https://example.com/avatar.jpg" class="w-full bg-[#0e1621] border border-[#232e3c] rounded-xl p-3 text-white text-sm focus:outline-none focus:border-[#2481cc]">
+                </div>
+            </div>
+            <button onclick="saveProfileChanges()" class="w-full bg-[#2481cc] hover:bg-[#1d6fa5] text-white font-bold py-2.5 rounded-xl text-sm transition cursor-pointer">Save Changes</button>
+        </div>
+    </div>
+
         <script>
         const firebaseConfig = {
             apiKey: "AIzaSyBmVtAF5wQrcrzlfjpTAZoLDFbyrpr9FmY",
@@ -162,12 +195,20 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        let loggedInUser = null; // { username, name }
-        let activeChatUser = null; // Selected user object to chat with
+        let loggedInUser = null;
+        let activeChatUser = null;
         let messagesListenerRef = null;
-        let allUsersCache = [];
+        let isDarkMode = true;
 
-        // Tab Switcher for Login / Register
+        function showToast(message) {
+            const toast = document.getElementById('toast-popup');
+            toast.innerText = message;
+            toast.classList.remove('hidden');
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 3000);
+        }
+
         function switchTab(tab) {
             const loginForm = document.getElementById('login-form');
             const registerForm = document.getElementById('register-form');
@@ -187,16 +228,43 @@
             }
         }
 
-        // Auto Login check on Page Load via localStorage
         window.addEventListener('DOMContentLoaded', () => {
             const savedUser = localStorage.getItem('tg_secure_user');
+            const savedTheme = localStorage.getItem('tg_secure_theme');
+            if (savedTheme === 'light') toggleTheme(true);
+
             if (savedUser) {
                 loggedInUser = JSON.parse(savedUser);
                 enterTelegramApp();
             }
         });
 
-        // Register Account
+        function toggleTheme(forcedLight = false) {
+            isDarkMode = forcedLight ? false : !isDarkMode;
+            const body = document.getElementById('body-theme');
+            const themeIcon = document.getElementById('theme-icon');
+            const themeText = document.getElementById('theme-text');
+
+            if (isDarkMode) {
+                body.className = "bg-[#0f172a] text-[#e2e8f0] h-screen flex flex-col justify-center items-center m-0 font-sans p-0 md:p-4 overflow-hidden transition-colors duration-300 touch-manipulation";
+                themeIcon.innerText = "🌙";
+                themeText.innerText = "Dark Mode";
+                localStorage.setItem('tg_secure_theme', 'dark');
+            } else {
+                body.className = "bg-[#f1f5f9] text-[#0f172a] h-screen flex flex-col justify-center items-center m-0 font-sans p-0 md:p-4 overflow-hidden transition-colors duration-300 touch-manipulation";
+                themeIcon.innerText = "☀️";
+                themeText.innerText = "Light Mode";
+                localStorage.setItem('tg_secure_theme', 'light');
+            }
+        }
+
+        function toggleDrawer() {
+            const drawer = document.getElementById('sidebar-drawer');
+            const backdrop = document.getElementById('drawer-backdrop');
+            drawer.classList.toggle('-translate-x-full');
+            backdrop.classList.toggle('hidden');
+        }
+
         function handleRegister() {
             const name = document.getElementById('reg-name').value.trim();
             let username = document.getElementById('reg-username').value.trim().toLowerCase();
@@ -207,24 +275,23 @@
                 return;
             }
 
-            // Sanitize username (alphanumeric & underscore only)
             username = username.replace(/[^a-zA-Z0-9_]/g, "");
 
             db.ref(`users/${username}`).once('value', (snapshot) => {
                 if (snapshot.exists()) {
                     alert("Username already taken! Choose another one.");
                 } else {
-                    const userData = { name, username, password, online: true, lastSeen: Date.now() };
+                    const userData = { name, username, password, profilePic: "", online: true, lastSeen: Date.now() };
                     db.ref(`users/${username}`).set(userData).then(() => {
                         loggedInUser = userData;
                         localStorage.setItem('tg_secure_user', JSON.stringify(userData));
-                        enterTelegramApp();
+                        showToast("Registration Successful! 🎉");
+                        setTimeout(() => enterTelegramApp(), 1000);
                     });
                 }
             });
         }
 
-        // Login Account
         function handleLogin() {
             let username = document.getElementById('login-username').value.trim().toLowerCase();
             const password = document.getElementById('login-password').value.trim();
@@ -247,7 +314,8 @@
 
                 loggedInUser = userData;
                 localStorage.setItem('tg_secure_user', JSON.stringify(userData));
-                enterTelegramApp();
+                showToast("Login Successful! Welcome back 👋");
+                setTimeout(() => enterTelegramApp(), 1000);
             });
         }
 
@@ -255,12 +323,54 @@
             document.getElementById('auth-screen').classList.add('hidden');
             document.getElementById('telegram-screen').classList.remove('hidden');
 
-            document.getElementById('current-user-name').innerText = loggedInUser.name;
-            document.getElementById('current-user-handle').innerText = "@" + loggedInUser.username;
-            document.getElementById('user-avatar').innerText = loggedInUser.name.charAt(0).toUpperCase();
-
+            updateDrawerProfile();
             updateOnlineStatus(true);
-            loadUsersList();
+        }
+
+        function updateDrawerProfile() {
+            document.getElementById('drawer-name').innerText = loggedInUser.name;
+            document.getElementById('drawer-handle').innerText = "@" + loggedInUser.username;
+            
+            const avatarDiv = document.getElementById('drawer-avatar');
+            if (loggedInUser.profilePic) {
+                avatarDiv.innerHTML = `<img src="${loggedInUser.profilePic}" class="w-full h-full object-cover rounded-full">`;
+            } else {
+                avatarDiv.innerText = loggedInUser.name.charAt(0).toUpperCase();
+            }
+        }
+
+        function openProfileModal() {
+            toggleDrawer();
+            document.getElementById('edit-profile-name').value = loggedInUser.name;
+            document.getElementById('edit-profile-pic').value = loggedInUser.profilePic || "";
+            document.getElementById('profile-modal').classList.remove('hidden');
+        }
+
+        function closeProfileModal() {
+            document.getElementById('profile-modal').classList.add('hidden');
+        }
+
+        function saveProfileChanges() {
+            const newName = document.getElementById('edit-profile-name').value.trim();
+            const newPic = document.getElementById('edit-profile-pic').value.trim();
+
+            if (!newName) {
+                alert("Name cannot be empty!");
+                return;
+            }
+
+            loggedInUser.name = newName;
+            loggedInUser.profilePic = newPic;
+
+            db.ref(`users/${loggedInUser.username}`).update({
+                name: newName,
+                profilePic: newPic
+            }).then(() => {
+                localStorage.setItem('tg_secure_user', JSON.stringify(loggedInUser));
+                updateDrawerProfile();
+                closeProfileModal();
+                showToast("Profile Updated Successfully! ✔️");
+            });
         }
 
         function updateOnlineStatus(isOnline) {
@@ -283,66 +393,49 @@
             location.reload();
         }
 
-        // Load Users List in Left Sidebar
-        function loadUsersList() {
-            const container = document.getElementById('users-list-container');
-            
-            db.ref('users').on('value', (snapshot) => {
-                container.innerHTML = "";
-                allUsersCache = [];
-
-                snapshot.forEach((childSnap) => {
-                    const user = childSnap.val();
-                    if (user.username !== loggedInUser.username) {
-                        allUsersCache.push(user);
-                    }
-                });
-
-                renderUserListUI(allUsersCache);
-            });
-        }
-
-        function renderUserListUI(users) {
-            const container = document.getElementById('users-list-container');
+        // Search Users function
+        function searchUsers(query) {
+            const q = query.toLowerCase().trim();
+            const container = document.getElementById('search-results-container');
             container.innerHTML = "";
 
-            if (users.length === 0) {
-                container.innerHTML = `<p class="text-xs text-[#7f91a4] text-center p-4">No other users found.</p>`;
+            if (!q) {
+                container.innerHTML = `<p class="text-xs text-[#7f91a4] text-center p-4">Type a username above to search and chat.</p>`;
                 return;
             }
 
-            users.forEach((user) => {
-                const isOnline = user.online;
-                const statusText = isOnline ? '<span class="text-[#2481cc]">online</span>' : '<span class="text-[#7f91a4]">offline</span>';
-                const initial = user.name.charAt(0).toUpperCase();
+            db.ref('users').once('value', (snapshot) => {
+                container.innerHTML = "";
+                let found = false;
 
-                const userDiv = document.createElement('div');
-                userDiv.className = `flex items-center gap-3 p-3 cursor-pointer hover:bg-[#202b38] transition ${activeChatUser && activeChatUser.username === user.username ? 'bg-[#202b38]' : ''}`;
-                userDiv.onclick = () => selectChatUser(user);
+                snapshot.forEach((childSnap) => {
+                    const user = childSnap.val();
+                    if (user.username !== loggedInUser.username && user.username.includes(q)) {
+                        found = true;
+                        const initial = user.name.charAt(0).toUpperCase();
+                        const picHTML = user.profilePic ? `<img src="${user.profilePic}" class="w-full h-full object-cover rounded-full">` : initial;
 
-                userDiv.innerHTML = `
-                    <div class="relative">
-                        <div class="w-10 h-10 rounded-full bg-[#2481cc] flex items-center justify-center font-bold text-white text-sm shadow">${initial}</div>
-                        ${isOnline ? '<span class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-[#17212b] rounded-full"></span>' : ''}
-                    </div>
-                    <div class="flex-1 overflow-hidden">
-                        <div class="flex justify-between items-center">
-                            <h4 class="font-bold text-white text-sm truncate">${escapeHTML(user.name)}</h4>
-                        </div>
-                        <p class="text-xs text-[#7f91a4] truncate">@${escapeHTML(user.username)} &bull; ${statusText}</p>
-                    </div>
-                `;
-                container.appendChild(userDiv);
+                        const div = document.createElement('div');
+                        div.className = "flex items-center gap-3 p-3 cursor-pointer hover:bg-[#202b38] rounded-xl transition";
+                        div.onclick = () => selectChatUser(user);
+
+                        div.innerHTML = `
+                            <div class="relative w-10 h-10 rounded-full bg-[#2481cc] flex items-center justify-center font-bold text-white text-sm overflow-hidden shadow">${picHTML}</div>
+                            <div class="flex-1 overflow-hidden">
+                                <h4 class="font-bold text-white text-sm truncate">${escapeHTML(user.name)}</h4>
+                                <p class="text-xs text-[#7f91a4] truncate">@${escapeHTML(user.username)}</p>
+                            </div>
+                        `;
+                        container.appendChild(div);
+                    }
+                });
+
+                if (!found) {
+                    container.innerHTML = `<p class="text-xs text-[#7f91a4] text-center p-4">No user found with username "@${escapeHTML(q)}"</p>`;
+                }
             });
         }
 
-        function filterUsers(query) {
-            const q = query.toLowerCase().trim();
-            const filtered = allUsersCache.filter(u => u.username.includes(q) || u.name.toLowerCase().includes(q));
-            renderUserListUI(filtered);
-        }
-
-        // Select Chat User & Open Right Window
         function selectChatUser(user) {
             activeChatUser = user;
 
@@ -350,17 +443,18 @@
             document.getElementById('active-chat-box').classList.remove('hidden');
 
             document.getElementById('active-chat-name').innerText = user.name;
-            document.getElementById('active-chat-avatar').innerText = user.name.charAt(0).toUpperCase();
             document.getElementById('active-chat-status').innerText = user.online ? 'online' : 'offline';
+            
+            const avatarBox = document.getElementById('active-chat-avatar');
+            if (user.profilePic) {
+                avatarBox.innerHTML = `<img src="${user.profilePic}" class="w-full h-full object-cover rounded-full">`;
+            } else {
+                avatarBox.innerText = user.name.charAt(0).toUpperCase();
+            }
 
-            // Highlight in sidebar
-            loadUsersList();
-
-            // Load Private Chat Messages
             loadDirectMessages();
         }
 
-        // Generate Unique Chat Room ID between two users (alphabetically sorted)
         function getChatRoomId(user1, user2) {
             return user1 < user2 ? `${user1}_${user2}` : `${user2}_${user1}`;
         }
@@ -431,3 +525,4 @@
     </script>
 </body>
 </html>
+
