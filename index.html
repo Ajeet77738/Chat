@@ -110,7 +110,7 @@
         </div>
         <div id="drawer-backdrop" onclick="toggleDrawer()" class="hidden fixed inset-0 bg-black/50 z-30"></div>
 
-        <!-- LEFT SIDEBAR (Recent Chats + Search) -->
+        <!-- LEFT SIDEBAR -->
         <div id="sidebar-panel" class="w-full md:w-80 bg-[#17212b] border-r border-[#232e3c] flex flex-col h-full z-10">
             <div class="p-3 bg-[#17212b] border-b border-[#232e3c] flex flex-col gap-3">
                 <div class="flex items-center gap-3">
@@ -123,9 +123,7 @@
             </div>
 
             <!-- Recent Chats / Search Results List -->
-            <div id="chats-list-container" class="flex-1 overflow-y-auto divide-y divide-[#232e3c]/40 p-2 space-y-1">
-                <!-- Dynamic recent chats or search results will load here -->
-            </div>
+            <div id="chats-list-container" class="flex-1 overflow-y-auto divide-y divide-[#232e3c]/40 p-2 space-y-1"></div>
         </div>
 
         <!-- RIGHT CHAT WINDOW -->
@@ -163,7 +161,7 @@
         </div>
     </div>
 
-    <!-- MY PROFILE MODAL -->
+    <!-- MY PROFILE MODAL (With Delete Account Option) -->
     <div id="profile-modal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-[#17212b] border border-[#232e3c] p-6 rounded-2xl w-full max-w-sm shadow-2xl space-y-4">
             <div class="flex justify-between items-center border-b border-[#232e3c] pb-3">
@@ -180,14 +178,18 @@
                     <input type="text" id="edit-profile-username" class="w-full bg-[#0e1621] border border-[#232e3c] rounded-xl p-3 text-white text-sm focus:outline-none focus:border-[#2481cc]">
                 </div>
                 <div>
-                    <label class="block text-[11px] font-bold uppercase tracking-wider text-[#7f91a4] mb-1">Upload Profile Picture from Device</label>
+                    <label class="block text-[11px] font-bold uppercase tracking-wider text-[#7f91a4] mb-1">Upload Profile Picture</label>
                     <input type="file" id="edit-profile-file" accept="image/*" class="w-full bg-[#0e1621] border border-[#232e3c] rounded-xl p-2 text-white text-xs file:mr-4 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-[#2481cc] file:text-white hover:file:bg-[#1d6fa5] cursor-pointer">
                 </div>
             </div>
-            <button onclick="saveProfileChanges()" class="w-full bg-[#2481cc] hover:bg-[#1d6fa5] text-white font-bold py-2.5 rounded-xl text-sm transition cursor-pointer">Save Changes</button>
+            <div class="space-y-2 pt-2">
+                <button onclick="saveProfileChanges()" class="w-full bg-[#2481cc] hover:bg-[#1d6fa5] text-white font-bold py-2.5 rounded-xl text-sm transition cursor-pointer">Save Changes</button>
+                <button onclick="deleteAccount()" class="w-full bg-red-600/20 hover:bg-red-600/30 text-red-400 border border-red-500/30 font-semibold py-2 rounded-xl text-xs transition cursor-pointer">Delete Account ⚠️</button>
+            </div>
         </div>
     </div>
-    <script>
+
+        <script>
         const firebaseConfig = {
             apiKey: "AIzaSyBmVtAF5wQrcrzlfjpTAZoLDFbyrpr9FmY",
             authDomain: "secret-d7e10.firebaseapp.com",
@@ -251,16 +253,19 @@
             const body = document.getElementById('body-theme');
             const themeIcon = document.getElementById('theme-icon');
             const themeText = document.getElementById('theme-text');
+            const authScreen = document.getElementById('auth-screen');
 
             if (isDarkMode) {
                 body.className = "bg-[#0f172a] text-[#e2e8f0] h-[100dvh] flex flex-col justify-center items-center m-0 font-sans p-0 md:p-4 overflow-hidden transition-colors duration-300";
-                themeIcon.innerText = "🌙";
-                themeText.innerText = "Dark Mode";
+                if(authScreen) authScreen.className = "w-full max-w-md bg-[#17212b] p-6 md:p-8 rounded-2xl shadow-2xl border border-[#232e3c] space-y-6 mx-4 text-white";
+                if(themeIcon) themeIcon.innerText = "🌙";
+                if(themeText) themeText.innerText = "Dark Mode";
                 localStorage.setItem('tg_secure_theme', 'dark');
             } else {
                 body.className = "bg-[#f1f5f9] text-[#0f172a] h-[100dvh] flex flex-col justify-center items-center m-0 font-sans p-0 md:p-4 overflow-hidden transition-colors duration-300";
-                themeIcon.innerText = "☀️";
-                themeText.innerText = "Light Mode";
+                if(authScreen) authScreen.className = "w-full max-w-md bg-white p-6 md:p-8 rounded-2xl shadow-2xl border border-gray-200 space-y-6 mx-4 text-gray-900";
+                if(themeIcon) themeIcon.innerText = "☀️";
+                if(themeText) themeText.innerText = "Light Mode";
                 localStorage.setItem('tg_secure_theme', 'light');
             }
         }
@@ -419,6 +424,17 @@
             }
         }
 
+        function deleteAccount() {
+            if (confirm("Are you sure you want to delete your account? This action cannot be undone.")) {
+                const username = loggedInUser.username;
+                db.ref(`users/${username}`).remove().then(() => {
+                    localStorage.removeItem('tg_secure_user');
+                    showToast("Account deleted successfully.");
+                    setTimeout(() => location.reload(), 1000);
+                });
+            }
+        }
+
         function updateOnlineStatus(isOnline) {
             if (!loggedInUser) return;
             db.ref(`users/${loggedInUser.username}`).update({
@@ -439,7 +455,7 @@
             location.reload();
         }
 
-        // Load existing conversations in sidebar with unread badges
+        // Load existing conversations in sidebar with real-time listening
         function loadRecentChats() {
             const container = document.getElementById('chats-list-container');
             
@@ -603,20 +619,14 @@
 
             const chatId = getChatRoomId(loggedInUser.username, activeChatUser.username);
             
-            db.ref(`chats/${chatId}/messages`).once('value', (snap) => {
-                const msgs = snap.val() || {};
-                for (let k in msgs) {
-                    if (msgs[k].sender !== loggedInUser.username && !msgs[k].read) {
-                        db.ref(`chats/${chatId}/messages/${k}/read`).set(true);
-                    }
-                }
-            });
-
             messagesListenerRef = db.ref(`chats/${chatId}/messages`);
-            messagesListenerRef.limitToLast(50).on('child_added', (snapshot) => {
+            
+            // Listen for new/existing messages in real-time
+            messagesListenerRef.on('child_added', (snapshot) => {
                 const msg = snapshot.val();
-                if (msg.sender !== activeChatUser.username && msg.sender !== loggedInUser.username) return;
-                
+                if (!msg) return;
+
+                // Mark incoming message as read instantly
                 if (msg.sender === activeChatUser.username && !msg.read) {
                     db.ref(`chats/${chatId}/messages/${snapshot.key}/read`).set(true);
                 }
