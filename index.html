@@ -110,29 +110,29 @@
         </div>
         <div id="drawer-backdrop" onclick="toggleDrawer()" class="hidden fixed inset-0 bg-black/50 z-30"></div>
 
-        <!-- LEFT SIDEBAR -->
+        <!-- LEFT SIDEBAR (Recent Chats + Search) -->
         <div id="sidebar-panel" class="w-full md:w-80 bg-[#17212b] border-r border-[#232e3c] flex flex-col h-full z-10">
             <div class="p-3 bg-[#17212b] border-b border-[#232e3c] flex flex-col gap-3">
                 <div class="flex items-center gap-3">
                     <button onclick="toggleDrawer()" class="text-white text-xl p-1.5 hover:bg-[#202b38] rounded-xl transition cursor-pointer" title="Menu">☰</button>
                     <div class="flex-1 relative">
-                        <input type="text" id="search-user-input" oninput="searchUsers(this.value)" placeholder="Search username (e.g. alex)..." class="w-full bg-[#0e1621] text-xs text-white rounded-xl py-2.5 px-3 pl-8 focus:outline-none border border-[#232e3c]">
+                        <input type="text" id="search-user-input" oninput="handleSearchInput(this.value)" placeholder="Search username (e.g. alex)..." class="w-full bg-[#0e1621] text-xs text-white rounded-xl py-2.5 px-3 pl-8 focus:outline-none border border-[#232e3c]">
                         <span class="absolute left-2.5 top-3 text-xs text-[#7f91a4]">🔍</span>
                     </div>
                 </div>
             </div>
 
-            <!-- Search Results -->
-            <div id="search-results-container" class="flex-1 overflow-y-auto divide-y divide-[#232e3c]/40 p-2">
-                <p class="text-xs text-[#7f91a4] text-center p-4">Type a username above to search and chat.</p>
+            <!-- Recent Chats / Search Results List -->
+            <div id="chats-list-container" class="flex-1 overflow-y-auto divide-y divide-[#232e3c]/40 p-2 space-y-1">
+                <!-- Dynamic recent chats or search results will load here -->
             </div>
         </div>
 
-        <!-- RIGHT CHAT WINDOW (Mobile Responsive) -->
+        <!-- RIGHT CHAT WINDOW -->
         <div id="chat-window-area" class="hidden md:flex flex-1 flex-col bg-[#0e1621] h-full absolute md:relative inset-0 z-20 md:z-auto">
             <div id="no-chat-selected" class="hidden md:flex flex-1 flex-col items-center justify-center p-6 text-center text-[#7f91a4]">
                 <div class="text-5xl mb-3">💬</div>
-                <p class="text-sm font-medium">Search for a username in the sidebar to start direct messaging</p>
+                <p class="text-sm font-medium">Select a chat from the sidebar or search a username to start messaging</p>
             </div>
 
             <!-- Active Chat Interface -->
@@ -187,7 +187,7 @@
             <button onclick="saveProfileChanges()" class="w-full bg-[#2481cc] hover:bg-[#1d6fa5] text-white font-bold py-2.5 rounded-xl text-sm transition cursor-pointer">Save Changes</button>
         </div>
     </div>
-    
+
         <script>
         const firebaseConfig = {
             apiKey: "AIzaSyBmVtAF5wQrcrzlfjpTAZoLDFbyrpr9FmY",
@@ -207,6 +207,7 @@
         let messagesListenerRef = null;
         let tempProfilePicBase64 = "";
         let isDarkMode = true;
+        let recentChatsMap = {}; // Tracks chat metadata for sidebar
 
         function showToast(message) {
             const toast = document.getElementById('toast-popup');
@@ -333,6 +334,7 @@
 
             updateDrawerProfile();
             updateOnlineStatus(true);
+            loadRecentChats();
         }
 
         function updateDrawerProfile() {
@@ -439,20 +441,99 @@
             location.reload();
         }
 
-        function searchUsers(query) {
+        // Load existing conversations in sidebar with unread badges
+        function loadRecentChats() {
+            const container = document.getElementById('chats-list-container');
+            
+            db.ref('chats').on('value', (snapshot) => {
+                const allChats = snapshot.val() || {};
+                container.innerHTML = "";
+                let chatPartners = [];
+
+                for (let chatId in allChats) {
+                    if (chatId.includes(loggedInUser.username)) {
+                        // Extract other user's username from chatId (format: user1_user2)
+                        const usersInChat = chatId.split('_');
+                        const partnerUsername = usersInChat[0] === loggedInUser.username ? usersInChat[1] : usersInChat[0];
+                        
+                        const messages = allChats[chatId].messages || {};
+                        let lastMsg = "";
+                        let lastTime = "";
+                        let unreadCount = 0;
+
+                        for (let msgKey in messages) {
+                            const m = messages[msgKey];
+                            lastMsg = m.text;
+                            lastTime = m.time;
+                            if (m.sender !== loggedInUser.username && !m.read) {
+                                unreadCount++;
+                            }
+                        }
+
+                        chatPartners.push({ partnerUsername, lastMsg, lastTime, unreadCount, chatId });
+                    }
+                }
+
+                if (chatPartners.length === 0) {
+                    container.innerHTML = `<p class="text-xs text-[#7f91a4] text-center p-4">No recent chats. Search a username above to start!</p>`;
+                    return;
+                }
+
+                // Fetch partner details from users node and render
+                chatPartners.forEach(chat => {
+                    db.ref(`users/${chat.partnerUsername}`).once('value', (uSnap) => {
+                        if (uSnap.exists()) {
+                            const partnerUser = uSnap.val();
+                            renderChatListItem(partnerUser, chat.lastMsg, chat.lastTime, chat.unreadCount);
+                        }
+                    });
+                });
+            });
+        }
+
+        function renderChatListItem(user, lastMsg, lastTime, unreadCount) {
+            const container = document.getElementById('chats-list-container');
+            // Remove existing if present to avoid duplication
+            const existing = document.getElementById(`chat-item-${user.username}`);
+            if (existing) existing.remove();
+
+            const initial = user.name.charAt(0).toUpperCase();
+            const picHTML = user.profilePic ? `<img src="${user.profilePic}" class="w-full h-full object-cover rounded-full">` : initial;
+            const unreadBadge = unreadCount > 0 ? `<span class="bg-[#2481cc] text-white text-[10px] font-bold px-2 py-0.5 rounded-full">${unreadCount}</span>` : '';
+
+            const div = document.createElement('div');
+            div.id = `chat-item-${user.username}`;
+            div.className = "flex items-center gap-3 p-3 cursor-pointer hover:bg-[#202b38] rounded-xl transition";
+            div.onclick = () => selectChatUser(user);
+
+            div.innerHTML = `
+                <div class="relative w-11 h-11 rounded-full bg-[#2481cc] flex items-center justify-center font-bold text-white text-sm overflow-hidden shadow">${picHTML}</div>
+                <div class="flex-1 overflow-hidden">
+                    <div class="flex justify-between items-center">
+                        <h4 class="font-bold text-white text-sm truncate">${escapeHTML(user.name)}</h4>
+                        <span class="text-[10px] text-[#7f91a4]">${lastTime || ''}</span>
+                    </div>
+                    <div class="flex justify-between items-center mt-0.5">
+                        <p class="text-xs text-[#7f91a4] truncate pr-2">${escapeHTML(lastMsg || 'Started a chat')}</p>
+                        ${unreadBadge}
+                    </div>
+                </div>
+            `;
+            container.appendChild(div);
+        }
+
+        function handleSearchInput(query) {
             const q = query.toLowerCase().trim();
-            const container = document.getElementById('search-results-container');
-            container.innerHTML = "";
+            const container = document.getElementById('chats-list-container');
 
             if (!q) {
-                container.innerHTML = `<p class="text-xs text-[#7f91a4] text-center p-4">Type a username above to search and chat.</p>`;
+                loadRecentChats(); // Reload recent chats if search is cleared
                 return;
             }
 
+            container.innerHTML = "";
             db.ref('users').once('value', (snapshot) => {
-                container.innerHTML = "";
                 let found = false;
-
                 snapshot.forEach((childSnap) => {
                     const user = childSnap.val();
                     if (user.username !== loggedInUser.username && user.username.includes(q)) {
@@ -465,7 +546,7 @@
                         div.onclick = () => selectChatUser(user);
 
                         div.innerHTML = `
-                            <div class="relative w-10 h-10 rounded-full bg-[#2481cc] flex items-center justify-center font-bold text-white text-sm overflow-hidden shadow">${picHTML}</div>
+                            <div class="relative w-11 h-11 rounded-full bg-[#2481cc] flex items-center justify-center font-bold text-white text-sm overflow-hidden shadow">${picHTML}</div>
                             <div class="flex-1 overflow-hidden">
                                 <h4 class="font-bold text-white text-sm truncate">${escapeHTML(user.name)}</h4>
                                 <p class="text-xs text-[#7f91a4] truncate">@${escapeHTML(user.username)}</p>
@@ -509,6 +590,7 @@
             document.getElementById('chat-window-area').classList.add('hidden');
             document.getElementById('active-chat-box').classList.add('hidden');
             document.getElementById('no-chat-selected').classList.remove('hidden');
+            loadRecentChats();
         }
 
         function getChatRoomId(user1, user2) {
@@ -524,10 +606,27 @@
             }
 
             const chatId = getChatRoomId(loggedInUser.username, activeChatUser.username);
-            messagesListenerRef = db.ref(`chats/${chatId}/messages`);
+            
+            // Mark all messages from partner as read
+            db.ref(`chats/${chatId}/messages`).once('value', (snap) => {
+                const msgs = snap.val() || {};
+                for (let k in msgs) {
+                    if (msgs[k].sender !== loggedInUser.username && !msgs[k].read) {
+                        db.ref(`chats/${chatId}/messages/${k}/read`).set(true);
+                    }
+                }
+            });
 
+            messagesListenerRef = db.ref(`chats/${chatId}/messages`);
             messagesListenerRef.limitToLast(50).on('child_added', (snapshot) => {
                 const msg = snapshot.val();
+                if (msg.sender !== activeChatUser.username && msg.sender !== loggedInUser.username) return;
+                
+                // Mark incoming message as read if chat is open
+                if (msg.sender === activeChatUser.username && !msg.read) {
+                    db.ref(`chats/${chatId}/messages/${snapshot.key}/read`).set(true);
+                }
+
                 renderChatMessage(msg);
             });
         }
@@ -567,6 +666,7 @@
                 sender: loggedInUser.username,
                 text: text,
                 time: timeString,
+                read: false,
                 timestamp: Date.now()
             };
 
