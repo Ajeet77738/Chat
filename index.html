@@ -80,6 +80,15 @@
             <!-- Dynamic messages load here -->
         </div>
 
+        <!-- Reply Preview Box (Hidden by default) -->
+        <div id="reply-preview-container" class="hidden bg-[#1f2c34] px-4 py-2 border-t border-[#2a3942] flex items-center justify-between">
+            <div class="border-l-4 border-[#00a884] pl-3 overflow-hidden">
+                <p id="reply-preview-sender" class="text-xs font-bold text-[#00a884]"></p>
+                <p id="reply-preview-text" class="text-xs text-[#8696a0] truncate max-w-md"></p>
+            </div>
+            <button onclick="cancelReply()" class="text-[#8696a0] hover:text-white font-bold text-sm px-2">&times;</button>
+        </div>
+
         <!-- Input Box -->
         <div id="chat-footer" class="bg-[#202c33] px-4 py-2.5 flex items-center gap-2 border-t border-[#2a3942] transition-colors duration-300">
             <input type="file" id="file-input" class="hidden" onchange="handleFileSelect(event)">
@@ -162,7 +171,7 @@
             </div>
         </div>
     </div>
-    <script>
+        <script>
         const firebaseConfig = {
             apiKey: "AIzaSyBmVtAF5wQrcrzlfjpTAZoLDFbyrpr9FmY",
             authDomain: "secret-d7e10.firebaseapp.com",
@@ -189,6 +198,10 @@
         let isCameraOff = false;
         let useFrontCamera = true;
         let currentCallType = 'video';
+        let isCallActiveLocally = false;
+
+        // Reply state
+        let replyingTo = null; // Stores { key, sender, text }
 
         const servers = {
             iceServers: [{ urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] }]
@@ -329,10 +342,23 @@
             });
         }
 
+        function setReplyTo(key, sender, text) {
+            replyingTo = { key, sender, text };
+            document.getElementById('reply-preview-sender').innerText = `Replying to ${sender}`;
+            document.getElementById('reply-preview-text').innerText = text || "Attachment";
+            document.getElementById('reply-preview-container').classList.remove('hidden');
+            document.getElementById('message-input').focus();
+        }
+
+        function cancelReply() {
+            replyingTo = null;
+            document.getElementById('reply-preview-container').classList.add('hidden');
+        }
+
         function sendMessage() {
             const input = document.getElementById('message-input');
             const text = input.value.trim();
-            if (!text) return;
+            if (!text && !window.pendingFile) return;
 
             db.ref(`rooms/${currentRoom}/typing/${currentUser}`).set(false);
             const timeString = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -344,11 +370,26 @@
                 time: timeString,
                 deliveredTo: { [currentUser]: true },
                 readBy: { [currentUser]: true },
+                replyTo: replyingTo ? { sender: replyingTo.sender, text: replyingTo.text } : null,
                 timestamp: Date.now()
             };
 
-            db.ref(`rooms/${currentRoom}/messages`).push(messageData);
+            const newMsgRef = db.ref(`rooms/${currentRoom}/messages`).push();
+            newMsgRef.set(messageData);
+
+            // Register delivery/read for other currently active members in the room
+            db.ref(`rooms/${currentRoom}/presence`).once('value', (snap) => {
+                snap.forEach((userSnap) => {
+                    const member = userSnap.key;
+                    if (member !== currentUser) {
+                        db.ref(`rooms/${currentRoom}/messages/${newMsgRef.key}/deliveredTo/${member}`).set(true);
+                        db.ref(`rooms/${currentRoom}/messages/${newMsgRef.key}/readBy/${member}`).set(true);
+                    }
+                });
+            });
+
             input.value = "";
+            cancelReply();
         }
 
         function handleFileSelect(event) {
@@ -371,10 +412,25 @@
                     time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
                     deliveredTo: { [currentUser]: true },
                     readBy: { [currentUser]: true },
+                    replyTo: replyingTo ? { sender: replyingTo.sender, text: replyingTo.text } : null,
                     timestamp: Date.now()
                 };
-                db.ref(`rooms/${currentRoom}/messages`).push(messageData);
+                
+                const newMsgRef = db.ref(`rooms/${currentRoom}/messages`).push();
+                newMsgRef.set(messageData);
+
+                db.ref(`rooms/${currentRoom}/presence`).once('value', (snap) => {
+                    snap.forEach((userSnap) => {
+                        const member = userSnap.key;
+                        if (member !== currentUser) {
+                            db.ref(`rooms/${currentRoom}/messages/${newMsgRef.key}/deliveredTo/${member}`).set(true);
+                            db.ref(`rooms/${currentRoom}/messages/${newMsgRef.key}/readBy/${member}`).set(true);
+                        }
+                    });
+                });
+
                 event.target.value = "";
+                cancelReply();
             };
             reader.readAsDataURL(file);
         }
@@ -386,6 +442,12 @@
             db.ref(`rooms/${currentRoom}/messages`).limitToLast(50).on('child_added', (snapshot) => {
                 const msg = snapshot.val();
                 renderSingleMessage(snapshot.key, msg);
+
+                // Auto mark as delivered and read for current active user when message loads
+                if (msg.sender !== currentUser) {
+                    db.ref(`rooms/${currentRoom}/messages/${snapshot.key}/deliveredTo/${currentUser}`).set(true);
+                    db.ref(`rooms/${currentRoom}/messages/${snapshot.key}/readBy/${currentUser}`).set(true);
+                }
 
                 if (msg.sender !== currentUser && document.hidden && Notification.permission === "granted") {
                     new Notification(`New message from ${msg.sender}`, {
@@ -419,11 +481,22 @@
             messageDiv.id = `msg-${key}`;
             messageDiv.className = `flex ${isMe ? 'justify-end' : 'justify-start'} message-anim relative msg-container my-1`;
 
+            let replyHTML = '';
+            if (msg.replyTo) {
+                replyHTML = `
+                    <div class="bg-black/20 border-l-2 border-[#00a884] px-2 py-1 mb-1 rounded text-xs">
+                        <p class="font-bold text-[#00a884]">${escapeHTML(msg.replyTo.sender)}</p>
+                        <p class="text-[#8696a0] truncate">${escapeHTML(msg.replyTo.text)}</p>
+                    </div>
+                `;
+            }
+
             let contentHTML = '';
             if (msg.deletedForEveryone) {
                 contentHTML = `<p class="italic text-[#8696a0] text-xs">🔒 This message was deleted</p>`;
             } else if (msg.type === 'image') {
                 contentHTML = `
+                    ${replyHTML}
                     <a href="${msg.fileData}" target="_blank" class="block mb-1">
                         <img src="${msg.fileData}" class="max-w-xs rounded-xl max-h-60 object-cover border border-white/10 shadow-md">
                     </a>
@@ -431,6 +504,7 @@
                 `;
             } else if (msg.type === 'file') {
                 contentHTML = `
+                    ${replyHTML}
                     <div class="flex items-center gap-3 mb-1 bg-[#111b21]/80 p-2.5 rounded-xl border border-[#374248]">
                         <span class="text-2xl">📄</span>
                         <div class="overflow-hidden">
@@ -440,16 +514,26 @@
                     </div>
                 `;
             } else {
-                contentHTML = `<p class="break-words pb-1 text-sm md:text-base leading-relaxed">${escapeHTML(msg.text || '')}</p>`;
+                contentHTML = `
+                    ${replyHTML}
+                    <p class="break-words pb-1 text-sm md:text-base leading-relaxed">${escapeHTML(msg.text || '')}</p>
+                `;
             }
 
+            // Sleek Dynamic Action Buttons (Info + Reply + Delete)
             let actionButtons = '';
             if (!msg.deletedForEveryone) {
-                const infoBtn = isMe ? `<button onclick="openMessageInfo('${key}')" class="bg-[#202c33] hover:bg-[#2a3942] text-[#8696a0] hover:text-[#00a884] px-1.5 py-0.5 rounded text-xs shadow border border-[#2a3942]" title="Info">ℹ️</button>` : '';
-                const deleteBtn = isMe ? `<button onclick="openDeleteModal('${key}')" class="bg-[#202c33] hover:bg-[#2a3942] text-[#8696a0] hover:text-red-400 px-1.5 py-0.5 rounded text-xs shadow border border-[#2a3942]" title="Delete">🗑️</button>` : '';
-                if (infoBtn || deleteBtn) {
-                    actionButtons = `<div class="msg-actions opacity-0 transition absolute -top-3 ${isMe ? 'left-2' : 'right-2'} flex items-center gap-1 z-10">${infoBtn}${deleteBtn}</div>`;
-                }
+                const infoBtn = isMe ? `<button onclick="openMessageInfo('${key}')" class="bg-[#202c33] hover:bg-[#2a3942] text-[#8696a0] hover:text-[#00a884] p-1 rounded text-xs shadow border border-[#2a3942]" title="Info">ℹ️</button>` : '';
+                const replyBtn = `<button onclick="setReplyTo('${key}', '${msg.sender}', '${escapeHTML(msg.text || msg.fileName || 'Attachment')}')" class="bg-[#202c33] hover:bg-[#2a3942] text-[#8696a0] hover:text-white p-1 rounded text-xs shadow border border-[#2a3942]" title="Reply">↩️</button>`;
+                const deleteBtn = isMe ? `<button onclick="openDeleteModal('${key}')" class="bg-[#202c33] hover:bg-[#2a3942] text-[#8696a0] hover:text-red-400 p-1 rounded text-xs shadow border border-[#2a3942]" title="Delete">🗑️</button>` : '';
+
+                actionButtons = `
+                    <div class="msg-actions opacity-0 transition absolute -top-3.5 ${isMe ? 'left-1' : 'right-1'} flex items-center gap-1 z-10 bg-[#111b21] px-1.5 py-0.5 rounded-full shadow border border-[#2a3942]">
+                        ${infoBtn}
+                        ${replyBtn}
+                        ${deleteBtn}
+                    </div>
+                `;
             }
 
             const bubbleColor = isMe ? 'bg-[#005c4b] text-white' : (isDarkMode ? 'bg-[#202c33] text-white' : 'bg-white text-gray-900 border border-gray-200');
@@ -470,8 +554,55 @@
             container.scrollTop = container.scrollHeight;
         }
 
+        // Fixed Message Info Implementation
+        function openMessageInfo(msgKey) {
+            db.ref(`rooms/${currentRoom}/messages/${msgKey}`).once('value', (snapshot) => {
+                const msg = snapshot.val();
+                if (!msg) return;
+
+                const readByList = document.getElementById('read-by-list');
+                const deliveredToList = document.getElementById('delivered-to-list');
+                readByList.innerHTML = '';
+                deliveredToList.innerHTML = '';
+
+                const readBy = msg.readBy || {};
+                const deliveredTo = msg.deliveredTo || {};
+
+                for (let user in readBy) {
+                    readByList.innerHTML += `<div class="flex items-center justify-between bg-[#111b21] px-3 py-1.5 rounded-lg border border-[#2a3942]"><span>${user}</span> <span class="text-xs text-[#00a884]">Read ✓✓</span></div>`;
+                }
+
+                for (let user in deliveredTo) {
+                    if (!readBy[user]) {
+                        deliveredToList.innerHTML += `<div class="flex items-center justify-between bg-[#111b21] px-3 py-1.5 rounded-lg border border-[#2a3942]"><span>${user}</span> <span class="text-xs text-[#8696a0]">Delivered ✓</span></div>`;
+                    }
+                }
+
+                if (readByList.innerHTML === '') readByList.innerHTML = '<p class="text-xs text-[#8696a0]">No read receipts yet</p>';
+                if (deliveredToList.innerHTML === '') deliveredToList.innerHTML = '<p class="text-xs text-[#8696a0]">All members read</p>';
+
+                document.getElementById('info-modal').classList.remove('hidden');
+            });
+        }
+
+        function closeInfoModal() { document.getElementById('info-modal').classList.add('hidden'); }
+        function openDeleteModal(msgKey) { selectedMessageKey = msgKey; document.getElementById('delete-modal').classList.remove('hidden'); }
+        function closeDeleteModal() { selectedMessageKey = null; document.getElementById('delete-modal').classList.add('hidden'); }
+        
+        function confirmDelete(type) {
+            if (!selectedMessageKey) return;
+            if (type === 'me') {
+                db.ref(`rooms/${currentRoom}/messages/${selectedMessageKey}/deletedForMe/${currentUser}`).set(true);
+                document.getElementById(`msg-${selectedMessageKey}`)?.remove();
+            } else if (type === 'everyone') {
+                db.ref(`rooms/${currentRoom}/messages/${selectedMessageKey}`).update({ deletedForEveryone: true, text: "", fileData: "", fileName: "" });
+            }
+            closeDeleteModal();
+        }
+
         async function startCall(type) {
             currentCallType = type;
+            isCallActiveLocally = true;
             document.getElementById('call-modal').classList.remove('hidden');
             document.getElementById('call-status-text').innerText = "Starting Call...";
 
@@ -502,6 +633,7 @@
                 db.ref(`rooms/${currentRoom}/call`).set({
                     type: type,
                     caller: currentUser,
+                    status: 'calling',
                     offer: { type: offer.type, sdp: offer.sdp }
                 });
                 document.getElementById('call-status-text').innerText = "Calling Participants...";
@@ -514,13 +646,12 @@
         function listenForCalls() {
             db.ref(`rooms/${currentRoom}/call`).on('value', async snapshot => {
                 const data = snapshot.val();
-                // If call node is deleted or empty, auto-dismiss any open call UI or ringing popups
-                if (!data) {
+                if (!data || data.status === 'ended') {
                     forceCloseCallUI();
                     return;
                 }
 
-                if (data.caller !== currentUser && !peerConnection) {
+                if (data.caller !== currentUser && !peerConnection && !isCallActiveLocally) {
                     incomingCallData = data;
                     document.getElementById('incoming-caller-text').innerText = `${data.caller} is calling (${data.type})...`;
                     document.getElementById('incoming-call-modal').classList.remove('hidden');
@@ -547,6 +678,7 @@
             document.getElementById('incoming-call-modal').classList.add('hidden');
             document.getElementById('call-modal').classList.remove('hidden');
             document.getElementById('call-status-text').innerText = "Connecting Call...";
+            isCallActiveLocally = true;
             currentCallType = incomingCallData.type;
 
             try {
@@ -575,6 +707,7 @@
                 await peerConnection.setLocalDescription(answer);
 
                 db.ref(`rooms/${currentRoom}/call/answer`).set({ type: answer.type, sdp: answer.sdp });
+                db.ref(`rooms/${currentRoom}/call/status`).set('connected');
                 document.getElementById('call-status-text').innerText = "Call Connected 🟢";
             } catch (err) {
                 alert("Could not access camera/mic.");
@@ -584,31 +717,34 @@
 
         function rejectCall() {
             document.getElementById('incoming-call-modal').classList.add('hidden');
-            db.ref(`rooms/${currentRoom}/call`).remove();
+            db.ref(`rooms/${currentRoom}/call`).update({ status: 'ended' });
+            setTimeout(() => db.ref(`rooms/${currentRoom}/call`).remove(), 500);
         }
 
         function endCall() {
-            if (localStream) localStream.getTracks().forEach(t => t.stop());
-            if (peerConnection) peerConnection.close();
-            peerConnection = null;
-            isMuted = false;
-            isCameraOff = false;
-            document.getElementById('mute-btn').innerText = "🎙️ Mute";
-            document.getElementById('cam-btn').innerText = "📹 Stop Cam";
-            document.getElementById('call-modal').classList.add('hidden');
-            document.getElementById('incoming-call-modal').classList.add('hidden');
-            // Remove call node from Firebase so all other participants' screens dismiss automatically
-            db.ref(`rooms/${currentRoom}/call`).remove();
+            db.ref(`rooms/${currentRoom}/call`).update({ status: 'ended' });
+            setTimeout(() => db.ref(`rooms/${currentRoom}/call`).remove(), 500);
+            forceCloseCallUI();
         }
 
         function forceCloseCallUI() {
-            if (localStream) localStream.getTracks().forEach(t => t.stop());
-            if (peerConnection) peerConnection.close();
-            peerConnection = null;
+            if (localStream) {
+                localStream.getTracks().forEach(t => t.stop());
+                localStream = null;
+            }
+            if (peerConnection) {
+                peerConnection.close();
+                peerConnection = null;
+            }
             isMuted = false;
             isCameraOff = false;
-            document.getElementById('mute-btn').innerText = "🎙️ Mute";
-            document.getElementById('cam-btn').innerText = "📹 Stop Cam";
+            isCallActiveLocally = false;
+            
+            const muteBtn = document.getElementById('mute-btn');
+            const camBtn = document.getElementById('cam-btn');
+            if (muteBtn) muteBtn.innerText = "🎙️ Mute";
+            if (camBtn) camBtn.innerText = "📹 Stop Cam";
+            
             document.getElementById('call-modal').classList.add('hidden');
             document.getElementById('incoming-call-modal').classList.add('hidden');
         }
@@ -662,34 +798,6 @@
             }
         }
 
-        function openMessageInfo(msgKey) {
-            db.ref(`rooms/${currentRoom}/messages/${msgKey}`).once('value', (snapshot) => {
-                const msg = snapshot.val();
-                if (!msg) return;
-                const readByList = document.getElementById('read-by-list');
-                const deliveredToList = document.getElementById('delivered-to-list');
-                readByList.innerHTML = ''; deliveredToList.innerHTML = '';
-                const readBy = msg.readBy || {}; const deliveredTo = msg.deliveredTo || {};
-                for (let user in readBy) readByList.innerHTML += `<div class="flex justify-between bg-[#111b21] px-3 py-1.5 rounded-lg"><span>${user}</span> <span class="text-xs text-[#00a884]">Read ✓✓</span></div>`;
-                for (let user in deliveredTo) {
-                    if (!readBy[user]) deliveredToList.innerHTML += `<div class="flex justify-between bg-[#111b21] px-3 py-1.5 rounded-lg"><span>${user}</span> <span class="text-xs text-[#8696a0]">Delivered ✓</span></div>`;
-                }
-                document.getElementById('info-modal').classList.remove('hidden');
-            });
-        }
-        function closeInfoModal() { document.getElementById('info-modal').classList.add('hidden'); }
-        function openDeleteModal(msgKey) { selectedMessageKey = msgKey; document.getElementById('delete-modal').classList.remove('hidden'); }
-        function closeDeleteModal() { selectedMessageKey = null; document.getElementById('delete-modal').classList.add('hidden'); }
-        function confirmDelete(type) {
-            if (!selectedMessageKey) return;
-            if (type === 'me') {
-                db.ref(`rooms/${currentRoom}/messages/${selectedMessageKey}/deletedForMe/${currentUser}`).set(true);
-                document.getElementById(`msg-${selectedMessageKey}`)?.remove();
-            } else if (type === 'everyone') {
-                db.ref(`rooms/${currentRoom}/messages/${selectedMessageKey}`).update({ deletedForEveryone: true, text: "", fileData: "", fileName: "" });
-            }
-            closeDeleteModal();
-        }
         function escapeHTML(str) {
             if (!str) return '';
             return str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag));
