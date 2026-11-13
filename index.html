@@ -40,12 +40,12 @@
         Success Notification
     </div>
 
-    <!-- AUTH CONTAINER (Default Register View) -->
-    <div id="auth-screen" class="w-full max-w-md bg-[#17212b] p-6 md:p-8 rounded-2xl shadow-2xl border border-[#232e3c] space-y-6 mx-4">
+    <!-- AUTH CONTAINER -->
+    <div id="auth-screen" class="w-full max-w-md bg-[#17212b] text-white p-6 md:p-8 rounded-2xl shadow-2xl border border-[#232e3c] space-y-6 mx-4">
         <div class="text-center">
             <div class="inline-block p-3 rounded-full bg-[#2481cc]/20 text-[#2481cc] text-3xl mb-2 shadow">✈️</div>
-            <h1 id="auth-title" class="text-2xl font-black text-white tracking-wide">Telegram Secure</h1>
-            <p id="auth-subtitle" class="text-xs text-[#7f91a4] mt-1">Create your account to start chatting</p>
+            <h1 class="text-2xl font-black tracking-wide">Telegram Secure</h1>
+            <p class="text-xs text-[#7f91a4] mt-1">Create your account to start chatting</p>
         </div>
 
         <div class="flex bg-[#0e1621] p-1 rounded-xl border border-[#232e3c]">
@@ -90,7 +90,7 @@
     </div>
 
         <!-- TELEGRAM MAIN CHAT INTERFACE -->
-    <div id="telegram-screen" class="hidden w-full max-w-5xl h-[100dvh] md:h-[94vh] bg-[#17212b] md:rounded-2xl shadow-2xl flex overflow-hidden border border-[#232e3c] relative">
+    <div id="telegram-screen" class="hidden w-full max-w-5xl h-[100dvh] md:h-[94vh] bg-[#17212b] text-white md:rounded-2xl shadow-2xl flex overflow-hidden border border-[#232e3c] relative">
         
         <!-- SIDEBAR DRAWER MENU -->
         <div id="sidebar-drawer" class="absolute inset-y-0 left-0 w-72 bg-[#17212b] border-r border-[#232e3c] z-40 transform -translate-x-full transition-transform duration-300 flex flex-col shadow-2xl">
@@ -161,11 +161,11 @@
         </div>
     </div>
 
-    <!-- MY PROFILE MODAL (With Delete Account Option) -->
+    <!-- MY PROFILE MODAL -->
     <div id="profile-modal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-[#17212b] border border-[#232e3c] p-6 rounded-2xl w-full max-w-sm shadow-2xl space-y-4">
+        <div class="bg-[#17212b] text-white border border-[#232e3c] p-6 rounded-2xl w-full max-w-sm shadow-2xl space-y-4">
             <div class="flex justify-between items-center border-b border-[#232e3c] pb-3">
-                <h3 class="font-bold text-white text-base">Edit Profile</h3>
+                <h3 class="font-bold text-base">Edit Profile</h3>
                 <button onclick="closeProfileModal()" class="text-[#7f91a4] hover:text-white text-lg font-bold">&times;</button>
             </div>
             <div class="space-y-3">
@@ -253,17 +253,14 @@
             const body = document.getElementById('body-theme');
             const themeIcon = document.getElementById('theme-icon');
             const themeText = document.getElementById('theme-text');
-            const authScreen = document.getElementById('auth-screen');
 
             if (isDarkMode) {
                 body.className = "bg-[#0f172a] text-[#e2e8f0] h-[100dvh] flex flex-col justify-center items-center m-0 font-sans p-0 md:p-4 overflow-hidden transition-colors duration-300";
-                if(authScreen) authScreen.className = "w-full max-w-md bg-[#17212b] p-6 md:p-8 rounded-2xl shadow-2xl border border-[#232e3c] space-y-6 mx-4 text-white";
                 if(themeIcon) themeIcon.innerText = "🌙";
                 if(themeText) themeText.innerText = "Dark Mode";
                 localStorage.setItem('tg_secure_theme', 'dark');
             } else {
                 body.className = "bg-[#f1f5f9] text-[#0f172a] h-[100dvh] flex flex-col justify-center items-center m-0 font-sans p-0 md:p-4 overflow-hidden transition-colors duration-300";
-                if(authScreen) authScreen.className = "w-full max-w-md bg-white p-6 md:p-8 rounded-2xl shadow-2xl border border-gray-200 space-y-6 mx-4 text-gray-900";
                 if(themeIcon) themeIcon.innerText = "☀️";
                 if(themeText) themeText.innerText = "Light Mode";
                 localStorage.setItem('tg_secure_theme', 'light');
@@ -455,7 +452,6 @@
             location.reload();
         }
 
-        // Load existing conversations in sidebar with real-time listening
         function loadRecentChats() {
             const container = document.getElementById('chats-list-container');
             
@@ -618,15 +614,12 @@
             }
 
             const chatId = getChatRoomId(loggedInUser.username, activeChatUser.username);
-            
             messagesListenerRef = db.ref(`chats/${chatId}/messages`);
             
-            // Listen for new/existing messages in real-time
             messagesListenerRef.on('child_added', (snapshot) => {
                 const msg = snapshot.val();
                 if (!msg) return;
 
-                // Mark incoming message as read instantly
                 if (msg.sender === activeChatUser.username && !msg.read) {
                     db.ref(`chats/${chatId}/messages/${snapshot.key}/read`).set(true);
                 }
