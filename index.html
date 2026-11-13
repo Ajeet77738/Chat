@@ -44,13 +44,12 @@
             <p id="auth-subtitle" class="text-xs text-[#7f91a4] mt-1">Create your account to start chatting</p>
         </div>
 
-        <!-- Forms Tabs Switcher (Default to Register) -->
         <div class="flex bg-[#0e1621] p-1 rounded-xl border border-[#232e3c]">
             <button onclick="switchTab('register')" id="tab-register-btn" class="flex-1 py-2 text-xs font-bold rounded-lg transition bg-[#2481cc] text-white cursor-pointer">Register</button>
             <button onclick="switchTab('login')" id="tab-login-btn" class="flex-1 py-2 text-xs font-bold rounded-lg transition text-[#7f91a4] cursor-pointer">Login</button>
         </div>
 
-        <!-- REGISTER FORM (Default Open) -->
+        <!-- REGISTER FORM -->
         <div id="register-form" class="space-y-4">
             <div class="bg-[#0e1621] border border-[#2481cc]/30 p-3 rounded-xl text-xs text-[#7f91a4] space-y-1">
                 <p class="font-bold text-[#2481cc]">📌 Registration Guidelines:</p>
@@ -72,7 +71,7 @@
             <button onclick="handleRegister()" class="w-full bg-[#2481cc] hover:bg-[#1d6fa5] text-white font-bold py-3 rounded-xl transition cursor-pointer shadow-lg">Create Account</button>
         </div>
 
-        <!-- LOGIN FORM (Hidden by default) -->
+        <!-- LOGIN FORM -->
         <div id="login-form" class="space-y-4 hidden">
             <div>
                 <label class="block text-[11px] font-bold uppercase tracking-wider text-[#7f91a4] mb-1">Unique Username</label>
@@ -85,31 +84,30 @@
             <button onclick="handleLogin()" class="w-full bg-[#2481cc] hover:bg-[#1d6fa5] text-white font-bold py-3 rounded-xl transition cursor-pointer shadow-lg">Sign In</button>
         </div>
     </div>
-        <!-- TELEGRAM MAIN CHAT INTERFACE (2-Column Layout) -->
+
+        <!-- TELEGRAM MAIN CHAT INTERFACE -->
     <div id="telegram-screen" class="hidden w-full max-w-5xl h-full md:h-[94vh] bg-[#17212b] md:rounded-2xl shadow-2xl flex overflow-hidden border border-[#232e3c] relative">
         
-        <!-- SIDEBAR DRAWER MENU (Telegram Style Hamburger Menu) -->
+        <!-- SIDEBAR DRAWER MENU -->
         <div id="sidebar-drawer" class="absolute inset-y-0 left-0 w-72 bg-[#17212b] border-r border-[#232e3c] z-30 transform -translate-x-full transition-transform duration-300 flex flex-col shadow-2xl">
             <div class="bg-[#2481cc] p-6 text-white space-y-3">
-                <div id="drawer-avatar" class="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center font-bold text-xl shadow">A</div>
+                <div id="drawer-avatar" class="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center font-bold text-xl overflow-hidden shadow">A</div>
                 <div>
                     <h3 id="drawer-name" class="font-bold text-base">User Name</h3>
                     <p id="drawer-handle" class="text-xs text-white/80">@handle</p>
                 </div>
             </div>
             <div class="flex-1 p-3 space-y-1 text-sm">
-                <button onclick="openProfileModal()" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-[#202b38] transition text-left cursor-pointer">👤 My Profile</button>
-                <button onclick="toggleTheme()" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-[#202b38] transition text-left cursor-pointer"><span id="theme-icon">🌙</span> <span id="theme-text">Dark Mode</span></button>
+                <button onclick="openProfileModal()" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-[#202b38] transition text-left cursor-pointer text-white">👤 My Profile</button>
+                <button onclick="toggleTheme()" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-[#202b38] transition text-left cursor-pointer text-white"><span id="theme-icon">🌙</span> <span id="theme-text">Dark Mode</span></button>
                 <hr class="border-[#232e3c] my-2">
                 <button onclick="logout()" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-red-500/10 text-red-400 transition text-left cursor-pointer">🚪 Logout</button>
             </div>
         </div>
-        <!-- Drawer Backdrop -->
         <div id="drawer-backdrop" onclick="toggleDrawer()" class="hidden fixed inset-0 bg-black/50 z-20"></div>
 
         <!-- LEFT SIDEBAR -->
-        <div class="w-full md:w-80 bg-[#17212b] border-r border-[#232e3c] flex flex-col h-full">
-            <!-- Sidebar Header with Hamburger & Search -->
+        <div id="sidebar-panel" class="w-full md:w-80 bg-[#17212b] border-r border-[#232e3c] flex flex-col h-full z-10">
             <div class="p-3 bg-[#17212b] border-b border-[#232e3c] flex flex-col gap-3">
                 <div class="flex items-center gap-3">
                     <button onclick="toggleDrawer()" class="text-white text-xl p-1.5 hover:bg-[#202b38] rounded-xl transition cursor-pointer" title="Menu">☰</button>
@@ -120,7 +118,7 @@
                 </div>
             </div>
 
-            <!-- Search Results / Direct Chats List -->
+            <!-- Search Results -->
             <div id="search-results-container" class="flex-1 overflow-y-auto divide-y divide-[#232e3c]/40 p-2">
                 <p class="text-xs text-[#7f91a4] text-center p-4">Type a username above to search and chat.</p>
             </div>
@@ -138,7 +136,8 @@
                 <!-- Chat Header -->
                 <div class="bg-[#17212b] px-5 py-3 flex items-center justify-between border-b border-[#232e3c]">
                     <div class="flex items-center gap-3">
-                        <div id="active-chat-avatar" class="w-9 h-9 rounded-full bg-[#2481cc] flex items-center justify-center font-bold text-white text-sm overflow-hidden">?</div>
+                        <button onclick="backToSidebar()" class="md:hidden text-white text-lg mr-1 cursor-pointer">←</button>
+                        <div id="active-chat-avatar" class="w-9 h-9 rounded-full bg-[#2481cc] flex items-center justify-center font-bold text-white text-sm overflow-hidden shadow">?</div>
                         <div>
                             <h3 id="active-chat-name" class="font-bold text-white text-sm">Select Name</h3>
                             <p id="active-chat-status" class="text-[11px] text-[#2481cc]">online</p>
@@ -160,7 +159,7 @@
         </div>
     </div>
 
-    <!-- MY PROFILE MODAL -->
+    <!-- MY PROFILE MODAL (With Username Edit & Local Image Upload) -->
     <div id="profile-modal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-[#17212b] border border-[#232e3c] p-6 rounded-2xl w-full max-w-sm shadow-2xl space-y-4">
             <div class="flex justify-between items-center border-b border-[#232e3c] pb-3">
@@ -173,14 +172,17 @@
                     <input type="text" id="edit-profile-name" class="w-full bg-[#0e1621] border border-[#232e3c] rounded-xl p-3 text-white text-sm focus:outline-none focus:border-[#2481cc]">
                 </div>
                 <div>
-                    <label class="block text-[11px] font-bold uppercase tracking-wider text-[#7f91a4] mb-1">Profile Pic URL (Image link)</label>
-                    <input type="text" id="edit-profile-pic" placeholder="https://example.com/avatar.jpg" class="w-full bg-[#0e1621] border border-[#232e3c] rounded-xl p-3 text-white text-sm focus:outline-none focus:border-[#2481cc]">
+                    <label class="block text-[11px] font-bold uppercase tracking-wider text-[#7f91a4] mb-1">Unique Username</label>
+                    <input type="text" id="edit-profile-username" class="w-full bg-[#0e1621] border border-[#232e3c] rounded-xl p-3 text-white text-sm focus:outline-none focus:border-[#2481cc]">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold uppercase tracking-wider text-[#7f91a4] mb-1">Upload Profile Picture from Device</label>
+                    <input type="file" id="edit-profile-file" accept="image/*" class="w-full bg-[#0e1621] border border-[#232e3c] rounded-xl p-2 text-white text-xs file:mr-4 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-[#2481cc] file:text-white hover:file:bg-[#1d6fa5] cursor-pointer">
                 </div>
             </div>
             <button onclick="saveProfileChanges()" class="w-full bg-[#2481cc] hover:bg-[#1d6fa5] text-white font-bold py-2.5 rounded-xl text-sm transition cursor-pointer">Save Changes</button>
         </div>
     </div>
-
         <script>
         const firebaseConfig = {
             apiKey: "AIzaSyBmVtAF5wQrcrzlfjpTAZoLDFbyrpr9FmY",
@@ -198,6 +200,7 @@
         let loggedInUser = null;
         let activeChatUser = null;
         let messagesListenerRef = null;
+        let tempProfilePicBase64 = "";
         let isDarkMode = true;
 
         function showToast(message) {
@@ -342,7 +345,9 @@
         function openProfileModal() {
             toggleDrawer();
             document.getElementById('edit-profile-name').value = loggedInUser.name;
-            document.getElementById('edit-profile-pic').value = loggedInUser.profilePic || "";
+            document.getElementById('edit-profile-username').value = loggedInUser.username;
+            document.getElementById('edit-profile-file').value = "";
+            tempProfilePicBase64 = loggedInUser.profilePic || "";
             document.getElementById('profile-modal').classList.remove('hidden');
         }
 
@@ -350,27 +355,65 @@
             document.getElementById('profile-modal').classList.add('hidden');
         }
 
+        // Handle File input for local image upload (Converted to base64)
+        document.getElementById('edit-profile-file').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            if (file.size > 1000000) {
+                alert("Image size should be under 1MB!");
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                tempProfilePicBase64 = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+
         function saveProfileChanges() {
             const newName = document.getElementById('edit-profile-name').value.trim();
-            const newPic = document.getElementById('edit-profile-pic').value.trim();
+            let newUsername = document.getElementById('edit-profile-username').value.trim().toLowerCase();
+            newUsername = newUsername.replace(/[^a-zA-Z0-9_]/g, "");
 
-            if (!newName) {
-                alert("Name cannot be empty!");
+            if (!newName || !newUsername) {
+                alert("Name and username cannot be empty!");
                 return;
             }
 
-            loggedInUser.name = newName;
-            loggedInUser.profilePic = newPic;
+            const oldUsername = loggedInUser.username;
 
-            db.ref(`users/${loggedInUser.username}`).update({
-                name: newName,
-                profilePic: newPic
-            }).then(() => {
-                localStorage.setItem('tg_secure_user', JSON.stringify(loggedInUser));
-                updateDrawerProfile();
-                closeProfileModal();
-                showToast("Profile Updated Successfully! ✔️");
-            });
+            if (newUsername !== oldUsername) {
+                db.ref(`users/${newUsername}`).once('value', (snapshot) => {
+                    if (snapshot.exists()) {
+                        alert("This username is already taken by someone else!");
+                    } else {
+                        // Migrate user data to new username node
+                        const updatedData = { ...loggedInUser, name: newName, username: newUsername, profilePic: tempProfilePicBase64 };
+                        db.ref(`users/${newUsername}`).set(updatedData).then(() => {
+                            db.ref(`users/${oldUsername}`).remove().then(() => {
+                                loggedInUser = updatedData;
+                                localStorage.setItem('tg_secure_user', JSON.stringify(loggedInUser));
+                                updateDrawerProfile();
+                                closeProfileModal();
+                                showToast("Profile & Username Updated! ✔️");
+                            });
+                        });
+                    }
+                });
+            } else {
+                loggedInUser.name = newName;
+                loggedInUser.profilePic = tempProfilePicBase64;
+
+                db.ref(`users/${oldUsername}`).update({
+                    name: newName,
+                    profilePic: tempProfilePicBase64
+                }).then(() => {
+                    localStorage.setItem('tg_secure_user', JSON.stringify(loggedInUser));
+                    updateDrawerProfile();
+                    closeProfileModal();
+                    showToast("Profile Updated Successfully! ✔️");
+                });
+            }
         }
 
         function updateOnlineStatus(isOnline) {
@@ -393,7 +436,6 @@
             location.reload();
         }
 
-        // Search Users function
         function searchUsers(query) {
             const q = query.toLowerCase().trim();
             const container = document.getElementById('search-results-container');
@@ -442,6 +484,11 @@
             document.getElementById('no-chat-selected').classList.add('hidden');
             document.getElementById('active-chat-box').classList.remove('hidden');
 
+            // Responsive mobile view helper
+            if (window.innerWidth < 768) {
+                document.getElementById('sidebar-panel').classList.add('hidden');
+            }
+
             document.getElementById('active-chat-name').innerText = user.name;
             document.getElementById('active-chat-status').innerText = user.online ? 'online' : 'offline';
             
@@ -453,6 +500,12 @@
             }
 
             loadDirectMessages();
+        }
+
+        function backToSidebar() {
+            document.getElementById('active-chat-box').classList.add('hidden');
+            document.getElementById('no-chat-selected').classList.remove('hidden');
+            document.getElementById('sidebar-panel').classList.remove('hidden');
         }
 
         function getChatRoomId(user1, user2) {
@@ -525,4 +578,3 @@
     </script>
 </body>
 </html>
-
